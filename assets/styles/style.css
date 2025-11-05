@@ -1,0 +1,108 @@
+:root {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at top, #1e1e2f 0%, #0c0c12 100%);
+    color: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+button {
+    background: linear-gradient(135deg, #ff3860, #ff8a00);
+    border: none;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    margin: 0.5rem;
+    border-radius: 999px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.screen {
+    text-align: center;
+    backdrop-filter: blur(8px);
+    background: rgba(12, 12, 18, 0.82);
+    padding: 2rem 3rem;
+    border-radius: 24px;
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+}
+
+.hidden {
+    display: none;
+}
+
+#game-container {
+    position: relative;
+}
+
+#game-canvas {
+    border-radius: 12px;
+    background: #0a0a0f;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+#hud {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    pointer-events: none;
+}
+
+#minimap {
+    width: 180px;
+    height: 180px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.1);
+}
+
+.hud-panel {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    gap: 1rem;
+    pointer-events: auto;
+}
+
+#pause-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+}
+
+.art-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.art-grid img {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+label {
+    display: block;
+    margin: 1rem 0;
+}
