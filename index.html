@@ -7,7 +7,81 @@
     <link rel="stylesheet" href="assets/styles/style.css" />
 </head>
 <body>
-    <div id="app"></div>
-    <script type="module" src="assets/scripts/app.js"></script>
+    <div id="startup-screen" class="screen">
+        <h1>Static's Escape Road</h1>
+        <button id="new-game-btn">New Game</button>
+        <button id="load-game-btn">Load Game</button>
+        <button id="settings-btn">Settings</button>
+    </div>
+    <div id="character-creation" class="screen hidden">
+        <h2>Character Creation</h2>
+        <label>
+            Gender:
+            <select id="char-gender">
+                <option value="random" selected>Random</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </label>
+        <label>
+            Outfit Color:
+            <input type="color" id="char-outfit" value="#1e90ff" />
+        </label>
+        <label>
+            Background Story:
+            <select id="char-background"></select>
+        </label>
+        <button id="start-game-btn">Start Game</button>https://github.com/StaticQuasar931/Statics-gta/pull/3/conflict?name=index.html&base_oid=c3a3f6b24417cdcf2998eff8348307cda4e48589&head_oid=d436f31ba3c02a276140ca7af80b5c6f5540f2e9
+    </div>
+    <div id="game-container" class="hidden">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+        <div id="hud">
+            <div id="minimap"></div>
+            <div class="hud-panel">
+                <span id="hud-money">$0</span>
+                <span id="hud-health">HP: 100</span>
+                <span id="hud-armor">Armor: 0</span>
+                <span id="hud-stamina">Stamina: 100</span>
+                <span id="hud-wanted">Wanted: 0</span>
+            </div>
+            <div class="hud-panel">
+                <span id="hud-weapon">Unarmed</span>
+                <span id="hud-ammo">Ammo: ∞</span>
+            </div>
+            <div class="hud-panel" id="mission-panel">No Active Mission</div>
+        </div>
+        <div id="pause-menu" class="screen hidden">
+            <h2>Paused</h2>
+            <button id="resume-btn">Resume</button>
+            <button id="save-btn">Save Game</button>
+            <button id="quit-btn">Quit to Menu</button>
+        </div>
+    </div>
+    <div id="concept-art" class="screen hidden">
+        <h2>Concept Art & Maps</h2>
+        <div class="art-grid">
+            <div>
+                <h3>City Map</h3>
+                <img src="assets/images/city-map.svg" alt="City Map" />
+            </div>
+            <div>
+                <h3>Vehicles</h3>
+                <img src="assets/images/vehicle-concepts.svg" alt="Vehicle Concepts" />
+            </div>
+            <div>
+                <h3>Weapons</h3>
+                <img src="assets/images/weapon-concepts.svg" alt="Weapon Concepts" />
+            </div>
+            <div>
+                <h3>Main Character</h3>
+                <img src="assets/images/character-concept.svg" alt="Character Concept" />
+            </div>
+            <div>
+                <h3>HUD Layout</h3>
+                <img src="assets/images/hud-layout.svg" alt="HUD Layout" />
+            </div>
+        </div>
+    </div>
+    <script type="module" src="assets/scripts/main.js"></script>
 </body>
 </html>

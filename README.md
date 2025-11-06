@@ -1,60 +1,35 @@
 # Static's Escape Road
 
-Static's Escape Road is a fully playable, browser-native, top-down sandbox that pays homage to open-world crime games. The demo focuses on crisp UI, responsive vehicle handling, deterministic world seeds, and a curated SVG art library so every building, character, and vehicle has a matching illustration.
+Static's Escape Road is a browser-based top-down sandbox prototype inspired by GTA-style gameplay loops. This demo focuses on showcasing modular systems, procedural world generation, and reusable architecture that can be expanded into a full-scale experience.
 
-## Highlights
+## Features
 
-- **Cinematic Lobby** – A polished title screen featuring *StaticQuasar931*, character creation with background stories, and instant access to settings or the concept-art gallery.
-- **Procedural World** – A 3.6 km² city grid assembled from ten bespoke building archetypes, rotating POI icons, and seeded vehicle/NPC placement.
-- **Responsive Gameplay** – WASD movement, smooth enter/exit vehicle flow on `E`, mouse-aim shooting, and car physics with drift, acceleration, and building-aware hitboxes.
-- **Police Escalation** – Wanted heat rises from gunfire or collisions, dispatching police cruisers, SWAT vans, and foot patrols that chase, box in vehicles, and clamp exits.
-- **Live HUD & Minimap** – Blurred glass UI panels, weapon icons, vehicle dashboards, interaction hints, and a minimap that mirrors the active camera and POIs.
-- **Settings & Saving** – Density sliders, cycle timing, hitbox debug toggle, and a one-click LocalStorage save/load pipeline.
-- **Concept Art Library** – Integrated gallery containing custom SVGs for buildings, vehicles, weapons, characters, shops, and police gear.
-
-## Controls
-
-| Action | Input |
-| ------ | ----- |
-| Move | `WASD` / Arrow keys |
-| Enter/Exit Vehicle | `E` |
-| Fire Weapon | Left mouse button |
-| Pause | `Esc` or `P` |
-| Toggle Gallery | `M` (in-game) |
+- **City & Wilderness**: Semi-handcrafted city districts combined with procedural outer terrain generated from a deterministic seed.
+- **Vehicles & Physics**: Lightweight top-down vehicle physics with civilian and police AI drivers.
+- **Combat & Wanted System**: Weapon inventory, projectiles, ragdoll-lite reactions, and escalating police response.
+- **Economy & Progression**: Missions, rewards, shops, and property hooks backed by a simple economy system.
+- **NPC Ecosystem**: Pedestrians, gangs, and police units reacting dynamically to the player.
+- **UI & Flow**: Startup, character creation, HUD overlays, minimap, pause menu, and concept art gallery.
+- **Save/Load**: LocalStorage-based save slots preserve seed and player stats.
 
 ## Getting Started
 
-1. Serve the project with any static web server (for example `npx serve .` or `python -m http.server`).
-2. Open the served URL in a modern browser.
-3. Click **Launch New Game**, configure your runner, and drop into the city.
-4. Use **Esc/P** to pause, access settings, or return to the lobby.
+1. Serve the project using any static web server (for example `npx serve .`).
+2. Open `http://localhost:3000` (or the reported port) in a modern browser.
+3. Start a new game, customize your character, and explore the sandbox.
 
 ## Project Structure
 
 ```
 index.html
 assets/
-  images/         # Hand-authored SVG art for buildings, vehicles, weapons, NPCs, police, POIs, HUD
+  images/        # AI-inspired placeholder concept art
   scripts/
-    app.js        # Entry point that wires UI events, assets, and the game loop
-    core/
-      assetLibrary.js  # Preloads and exposes the SVG catalog
-      input.js         # Keyboard/mouse state manager
-      uiManager.js     # Builds screens, HUD, settings, and gallery overlays
-    game/
-      world.js         # Procedural world, entities, physics, police AI, and rendering
-  styles/
-    style.css     # Global styling for screens, HUD, minimap, modals
+    systems/     # Modular gameplay systems (world, vehicles, economy, etc.)
+    main.js      # Entry point wiring the systems together
+  styles/        # Global styling
 ```
 
-## Save Data
+## Extending
 
-Progress is stored locally under the key `statics-escape-road-save-v1`. Loading pulls the saved seed, player stats, wanted level, and settings so worlds remain consistent across sessions.
-
-## Extending the Demo
-
-- Replace the canvas renderer with WebGL or a game engine export while keeping the modular logic.
-- Swap SVG placeholders with production-ready art; the asset library already maps friendly keys to paths.
-- Expand missions or economy hooks by layering additional systems atop `GameWorld`.
-
-Enjoy the ride, and thanks for playing in StaticQuasar931's sandbox!
+Each gameplay system is intentionally modular. You can build on the provided classes, swap implementations, or connect them to a full engine. The canvas renderer serves as a visual prototype that can be replaced with WebGL, Unity WebGL exports, or any other rendering backend.
