@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240">
+  <rect width="480" height="240" fill="#0f172a" />
+  <g stroke="#1e293b" stroke-width="4" fill="none">
+    <rect x="30" y="40" width="140" height="60" rx="16" fill="#ef4444" />
+    <rect x="180" y="40" width="140" height="60" rx="20" fill="#38bdf8" />
+    <rect x="330" y="40" width="120" height="60" rx="12" fill="#f59e0b" />
+    <rect x="60" y="140" width="140" height="60" rx="26" fill="#10b981" />
+    <rect x="230" y="140" width="140" height="60" rx="10" fill="#6366f1" />
+  </g>
+  <g fill="#e2e8f0" font-family="'Segoe UI',sans-serif" font-size="16">
+    <text x="40" y="120">Sports Car</text>
+    <text x="190" y="120">Police Cruiser</text>
+    <text x="340" y="120">Delivery Van</text>
+    <text x="70" y="220">Motorcycle</text>
+    <text x="240" y="220">Armored SUV</text>
+  </g>
+</svg>

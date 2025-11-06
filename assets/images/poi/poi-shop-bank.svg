@@ -1,0 +1,10 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 30L40 14L68 30V34H12V30Z" fill="#f1c40f" stroke="#d68910" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="16" y="34" width="48" height="30" rx="4" fill="#f7dc6f" stroke="#d68910" stroke-width="4"/>
+  <rect x="20" y="40" width="8" height="16" rx="2" fill="#d68910"/>
+  <rect x="36" y="40" width="8" height="16" rx="2" fill="#d68910"/>
+  <rect x="52" y="40" width="8" height="16" rx="2" fill="#d68910"/>
+  <path d="M40 34V24" stroke="#d68910" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="40" cy="26" r="6" fill="#f7dc6f" stroke="#d68910" stroke-width="4"/>
+  <text x="40" y="55" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="12" font-weight="700" fill="#fef5e7">$</text>
+</svg>
