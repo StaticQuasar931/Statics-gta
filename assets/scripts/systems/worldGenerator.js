@@ -27,9 +27,6 @@ export class WorldGenerator {
             city,
             wilderness,
             pointsOfInterest: this._generatePOI(city),
-            assets: {
-                buildings: city.palette,
-            },
         };
     }
 
@@ -45,39 +42,23 @@ export class WorldGenerator {
             { name: 'Suburbs', color: '#00b894', density: 0.5 },
             { name: 'Coastline', color: '#74b9ff', density: 0.4 },
         ];
-        const buildingPalette = [
-            { id: 'corporate', asset: 'assets/images/buildings/building-01.svg', tint: '#3b7fd4' },
-            { id: 'residential-tower', asset: 'assets/images/buildings/building-02.svg', tint: '#4aa4f0' },
-            { id: 'heritage-loft', asset: 'assets/images/buildings/building-03.svg', tint: '#ff9867' },
-            { id: 'industrial-plant', asset: 'assets/images/buildings/building-04.svg', tint: '#8e44ad' },
-            { id: 'warehouse', asset: 'assets/images/buildings/building-05.svg', tint: '#6c5ce7' },
-            { id: 'suburban-row', asset: 'assets/images/buildings/building-06.svg', tint: '#2ecc71' },
-            { id: 'coastal-condo', asset: 'assets/images/buildings/building-07.svg', tint: '#45aaf2' },
-            { id: 'shopping-plaza', asset: 'assets/images/buildings/building-08.svg', tint: '#e17055' },
-            { id: 'museum', asset: 'assets/images/buildings/building-09.svg', tint: '#dfe6e9' },
-            { id: 'service-station', asset: 'assets/images/buildings/building-10.svg', tint: '#fdcb6e' },
-        ];
         const blocks = [];
         const size = 16; // 16x16 grid for the city core
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
                 const district = districts[Math.floor(this.random() * districts.length)];
                 const road = this.random() < 0.15; // 15% chance a tile is a major road
-                const style = buildingPalette[Math.floor(this.random() * buildingPalette.length)];
-                const blockColor = road ? '#444' : style.tint ?? district.color;
                 blocks.push({
                     x,
                     y,
                     district: district.name,
-                    color: blockColor,
+                    color: road ? '#444' : district.color,
                     type: road ? 'road' : 'building',
                     elevation: 0,
-                    asset: road ? null : style.asset,
-                    buildingType: road ? null : style.id,
                 });
             }
         }
-        return { size, blocks, districts, palette: buildingPalette };
+        return { size, blocks, districts };
     }
 
     /**
@@ -113,10 +94,10 @@ export class WorldGenerator {
         const safehouses = [];
         for (const block of city.blocks) {
             if (block.type === 'building' && this.random() < 0.05) {
-                garages.push({ x: block.x, y: block.y, type: 'garage', icon: 'garage' });
+                garages.push({ x: block.x, y: block.y });
             }
             if (block.type === 'building' && this.random() < 0.04) {
-                safehouses.push({ x: block.x, y: block.y, type: 'safehouse', icon: 'safehouse' });
+                safehouses.push({ x: block.x, y: block.y });
             }
         }
         return {
@@ -135,11 +116,6 @@ export class WorldGenerator {
                 x: block.x,
                 y: block.y,
                 type: categories[Math.floor(this.random() * categories.length)],
-            }))
-            .map((shop) => ({
-                ...shop,
-                slug: shop.type.toLowerCase(),
-                icon: `shop-${shop.type.toLowerCase()}`,
             }));
     }
 

@@ -10,33 +10,24 @@ const createId = () => {
 };
 
 export class NPCManager {
-    constructor(world, config = {}) {
+    constructor(world) {
         this.civilians = [];
         this.gangs = [];
         this.police = [];
         this.world = world;
-        this.config = {
-            pedestrianDensity: config.pedestrianDensity ?? 1,
-            baseCivilians: 36,
-            baseGangs: 12,
-        };
-        this.radiusMap = {
-            civilian: 6,
-            gang: 6.5,
-            police: 7,
-        };
         this._spawnInitialPopulation();
     }
 
     _spawnInitialPopulation() {
-        const targets = this._targetCounts();
-        this._populateGroup(this.civilians, 'civilian', targets.civilians);
-        this._populateGroup(this.gangs, 'gang', targets.gangs);
+        for (let i = 0; i < 40; i++) {
+            this.civilians.push(this._createNPC('civilian'));
+        }
+        for (let i = 0; i < 12; i++) {
+            this.gangs.push(this._createNPC('gang'));
+        }
     }
 
     _createNPC(faction) {
-        const baseSpeed =
-            faction === 'police' ? 2 : faction === 'gang' ? 1.7 : 1.2;
         return {
             id: createId(),
             faction,
@@ -47,9 +38,6 @@ export class NPCManager {
             target: null,
             state: 'idle',
             health: 100,
-            baseSpeed,
-            radius: this.radiusMap[faction] ?? 6,
-            spriteId: faction,
         };
     }
 
@@ -68,7 +56,7 @@ export class NPCManager {
             const dx = npc.target.x - npc.position.x;
             const dy = npc.target.y - npc.position.y;
             const dist = Math.hypot(dx, dy);
-            const speed = aggression ? npc.baseSpeed + 0.2 : npc.baseSpeed;
+            const speed = aggression ? 1.8 : 1.2;
             if (dist > 4) {
                 npc.position.x += (dx / dist) * speed * dt * 60;
                 npc.position.y += (dy / dist) * speed * dt * 60;
@@ -82,7 +70,6 @@ export class NPCManager {
         for (const gang of this.gangs) updateNPC(gang, true);
         for (const officer of this.police) updateNPC(officer, true);
         this._cleanDead();
-        this._maintainPopulation();
     }
 
     spawnPolicePatrol(center, level) {
@@ -111,41 +98,5 @@ export class NPCManager {
         this.civilians = this.civilians.filter(filterAlive);
         this.gangs = this.gangs.filter(filterAlive);
         this.police = this.police.filter(filterAlive);
-    }
-
-    setDensity(multiplier) {
-        this.config.pedestrianDensity = Math.max(0.2, multiplier);
-        const targets = this._targetCounts();
-        this._balanceGroup(this.civilians, 'civilian', targets.civilians);
-        this._balanceGroup(this.gangs, 'gang', targets.gangs);
-    }
-
-    _targetCounts() {
-        const density = Math.max(0.2, this.config.pedestrianDensity);
-        return {
-            civilians: Math.round(this.config.baseCivilians * density),
-            gangs: Math.round(this.config.baseGangs * Math.max(0.3, density * 0.6)),
-        };
-    }
-
-    _populateGroup(container, faction, target) {
-        while (container.length < target) {
-            container.push(this._createNPC(faction));
-        }
-    }
-
-    _balanceGroup(container, faction, target) {
-        if (container.length > target) {
-            container.splice(target);
-        }
-        while (container.length < target) {
-            container.push(this._createNPC(faction));
-        }
-    }
-
-    _maintainPopulation() {
-        const targets = this._targetCounts();
-        this._populateGroup(this.civilians, 'civilian', targets.civilians);
-        this._populateGroup(this.gangs, 'gang', targets.gangs);
     }
 }

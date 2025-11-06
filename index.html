@@ -12,7 +12,6 @@
         <button id="new-game-btn">New Game</button>
         <button id="load-game-btn">Load Game</button>
         <button id="settings-btn">Settings</button>
-        <button id="gallery-btn">Concept Art</button>
     </div>
     <div id="character-creation" class="screen hidden">
         <h2>Character Creation</h2>
@@ -37,7 +36,6 @@
     <div id="game-container" class="hidden">
         <canvas id="game-canvas" width="1280" height="720"></canvas>
         <div id="hud">
-            <div id="hud-clock">Dawn</div>
             <div id="minimap"></div>
             <div class="hud-panel">
                 <span id="hud-money">$0</span>
@@ -46,163 +44,44 @@
                 <span id="hud-stamina">Stamina: 100</span>
                 <span id="hud-wanted">Wanted: 0</span>
             </div>
-            <div class="hud-panel hud-panel--weapon">
-                <img id="hud-weapon-icon" alt="Weapon icon" />
-                <div class="hud-weapon-details">
-                    <span id="hud-weapon">Unarmed</span>
-                    <span id="hud-ammo">Ammo: ∞</span>
-                </div>
-            </div>
-            <div class="hud-panel hidden" id="hud-vehicle-panel">
-                <span id="hud-vehicle-name">On Foot</span>
-                <span id="hud-vehicle-speed">0 km/h</span>
+            <div class="hud-panel">
+                <span id="hud-weapon">Unarmed</span>
+                <span id="hud-ammo">Ammo: ∞</span>
             </div>
             <div class="hud-panel" id="mission-panel">No Active Mission</div>
         </div>
-        <div id="interaction-hint" class="hidden"></div>
         <div id="pause-menu" class="screen hidden">
             <h2>Paused</h2>
             <button id="resume-btn">Resume</button>
             <button id="save-btn">Save Game</button>
             <button id="quit-btn">Quit to Menu</button>
-            <button id="pause-settings-btn">Settings</button>
-            <button id="pause-gallery-btn">Concept Art</button>
         </div>
     </div>
     <div id="concept-art" class="screen hidden">
         <h2>Concept Art & Maps</h2>
-        <button id="close-gallery-btn" class="compact">Back</button>
-        <div class="art-section">
-            <h3>World Overview</h3>
-            <div class="art-grid">
-                <figure>
-                    <img src="assets/images/city-map.svg" alt="City Map" />
-                    <figcaption>Top-down city districts map</figcaption>
-                </figure>
-                <figure>
-                    <img src="assets/images/ui/hud-layout.svg" alt="HUD Layout" />
-                    <figcaption>HUD layout exploration</figcaption>
-                </figure>
+        <div class="art-grid">
+            <div>
+                <h3>City Map</h3>
+                <img src="assets/images/city-map.svg" alt="City Map" />
             </div>
-        </div>
-        <div class="art-section">
-            <h3>Building Modules</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/buildings/building-01.svg" alt="High-rise" /><figcaption>High-rise Corporate</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-02.svg" alt="Residential Tower" /><figcaption>Residential Tower</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-03.svg" alt="Brick Lofts" /><figcaption>Old Town Lofts</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-04.svg" alt="Industrial" /><figcaption>Industrial Plant</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-05.svg" alt="Warehouse" /><figcaption>Warehouse Depot</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-06.svg" alt="Suburban" /><figcaption>Suburban Row</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-07.svg" alt="Coastal" /><figcaption>Coastal Condos</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-08.svg" alt="Mall" /><figcaption>Shopping Plaza</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-09.svg" alt="Museum" /><figcaption>Cultural Museum</figcaption></figure>
-                <figure><img src="assets/images/buildings/building-10.svg" alt="Gas Station" /><figcaption>Roadside Services</figcaption></figure>
+            <div>
+                <h3>Vehicles</h3>
+                <img src="assets/images/vehicle-concepts.svg" alt="Vehicle Concepts" />
             </div>
-        </div>
-        <div class="art-section">
-            <h3>Vehicles</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/vehicles/sedan.svg" alt="Sedan" /><figcaption>City Sedan</figcaption></figure>
-                <figure><img src="assets/images/vehicles/sports-car.svg" alt="Sports Car" /><figcaption>Sports Coupe</figcaption></figure>
-                <figure><img src="assets/images/vehicles/muscle-car.svg" alt="Muscle Car" /><figcaption>Muscle Classic</figcaption></figure>
-                <figure><img src="assets/images/vehicles/truck.svg" alt="Truck" /><figcaption>Utility Truck</figcaption></figure>
-                <figure><img src="assets/images/vehicles/motorcycle.svg" alt="Motorcycle" /><figcaption>Street Bike</figcaption></figure>
-                <figure><img src="assets/images/vehicles/police-cruiser.svg" alt="Police Cruiser" /><figcaption>Police Cruiser</figcaption></figure>
-                <figure><img src="assets/images/vehicles/swat-van.svg" alt="SWAT Van" /><figcaption>SWAT Van</figcaption></figure>
-                <figure><img src="assets/images/vehicles/helicopter.svg" alt="Helicopter" /><figcaption>Police Helicopter</figcaption></figure>
-                <figure><img src="assets/images/vehicles/boat.svg" alt="Boat" /><figcaption>Patrol Boat</figcaption></figure>
+            <div>
+                <h3>Weapons</h3>
+                <img src="assets/images/weapon-concepts.svg" alt="Weapon Concepts" />
             </div>
-        </div>
-        <div class="art-section">
-            <h3>Characters & NPCs</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/characters/protagonist-male.svg" alt="Male Protagonist" /><figcaption>Male Protagonist</figcaption></figure>
-                <figure><img src="assets/images/characters/protagonist-female.svg" alt="Female Protagonist" /><figcaption>Female Protagonist</figcaption></figure>
-                <figure><img src="assets/images/characters/npc-civilian.svg" alt="Civilian" /><figcaption>City Civilian</figcaption></figure>
-                <figure><img src="assets/images/characters/npc-gang.svg" alt="Gang" /><figcaption>Gang Enforcer</figcaption></figure>
-                <figure><img src="assets/images/characters/npc-cop.svg" alt="Police" /><figcaption>Officer</figcaption></figure>
+            <div>
+                <h3>Main Character</h3>
+                <img src="assets/images/character-concept.svg" alt="Character Concept" />
             </div>
-        </div>
-        <div class="art-section">
-            <h3>POI & Shop Icons</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/poi/poi-safehouse.svg" alt="Safehouse Icon" /><figcaption>Safehouse Marker</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-garage.svg" alt="Garage Icon" /><figcaption>Garage Marker</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-shop-weapons.svg" alt="Weapons Shop Icon" /><figcaption>Weapons Dealer</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-shop-cars.svg" alt="Car Dealership Icon" /><figcaption>Car Dealership</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-shop-gas.svg" alt="Gas Station Icon" /><figcaption>Fuel Station</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-shop-bank.svg" alt="Bank Icon" /><figcaption>Bank Branch</figcaption></figure>
-                <figure><img src="assets/images/poi/poi-shop-clothing.svg" alt="Clothing Icon" /><figcaption>Clothing Boutique</figcaption></figure>
-            </div>
-        </div>
-        <div class="art-section">
-            <h3>Weapon Concepts</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/weapons/pistol.svg" alt="Pistol" /><figcaption>9mm Pistol</figcaption></figure>
-                <figure><img src="assets/images/weapons/smg.svg" alt="SMG" /><figcaption>Street SMG</figcaption></figure>
-                <figure><img src="assets/images/weapons/rifle.svg" alt="Rifle" /><figcaption>Marksman Rifle</figcaption></figure>
-                <figure><img src="assets/images/weapons/shotgun.svg" alt="Shotgun" /><figcaption>Combat Shotgun</figcaption></figure>
-                <figure><img src="assets/images/weapons/sniper.svg" alt="Sniper" /><figcaption>Heavy Sniper</figcaption></figure>
-                <figure><img src="assets/images/weapons/grenade.svg" alt="Grenade" /><figcaption>Flash Grenade</figcaption></figure>
-            </div>
-        </div>
-        <div class="art-section">
-            <h3>Police Gear</h3>
-            <div class="art-grid art-grid--tight">
-                <figure><img src="assets/images/police/police-units.svg" alt="Police Units" /><figcaption>Urban Patrol Units</figcaption></figure>
-                <figure><img src="assets/images/police/riot-officer.svg" alt="Riot Officer" /><figcaption>Riot Control Gear</figcaption></figure>
+            <div>
+                <h3>HUD Layout</h3>
+                <img src="assets/images/hud-layout.svg" alt="HUD Layout" />
             </div>
         </div>
     </div>
-    <div id="loading-toast" class="hidden">Loading high fidelity assets…</div>
-    <div id="settings-modal" class="screen hidden modal">
-        <h2>Settings</h2>
-        <section class="settings-group">
-            <h3>Graphics</h3>
-            <label>
-                Overall Quality
-                <select id="graphics-quality">
-                    <option value="low">Low</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </label>
-            <label>
-                Weather Intensity
-                <input type="range" id="weather-intensity" min="0" max="2" step="0.1" value="1" />
-            </label>
-            <label>
-                Day/Night Cycle (seconds)
-                <input type="range" id="day-night-duration" min="60" max="360" step="30" value="120" />
-            </label>
-        </section>
-        <section class="settings-group">
-            <h3>World Density</h3>
-            <label>
-                Pedestrian Density
-                <input type="range" id="pedestrian-density" min="0.2" max="2" step="0.1" value="1" />
-            </label>
-            <label>
-                Traffic Density
-                <input type="range" id="traffic-density" min="0" max="2" step="0.1" value="0.8" />
-            </label>
-            <label class="checkbox">
-                <input type="checkbox" id="show-hitboxes" /> Show Hitboxes
-            </label>
-        </section>
-        <section class="settings-group">
-            <h3>Accessibility</h3>
-            <label class="checkbox">
-                <input type="checkbox" id="reduced-motion" /> Reduce Motion (disables camera sway)
-            </label>
-        </section>
-        <div class="settings-actions">
-            <button id="apply-settings-btn">Apply</button>
-            <button id="settings-close-btn">Close</button>
-        </div>
-    </div>
-    <div id="overlay" class="backdrop hidden"></div>
     <script type="module" src="assets/scripts/main.js"></script>
 </body>
 </html>

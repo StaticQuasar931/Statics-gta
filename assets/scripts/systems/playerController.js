@@ -13,8 +13,6 @@ export class PlayerController {
         this.health = 100;
         this.armor = 0;
         this.inVehicle = null;
-        this.radius = 9;
-        this.spriteId = 'player-male';
         this.input = { up: false, down: false, left: false, right: false, shoot: false };
         this.gender = 'random';
         this.outfitColor = '#1e90ff';
@@ -25,29 +23,14 @@ export class PlayerController {
     }
 
     customize({ gender, outfitColor }) {
-        if (gender === 'random') {
-            this.gender = Math.random() > 0.5 ? 'male' : 'female';
-        } else {
-            this.gender = gender;
-        }
+        this.gender = gender;
         this.outfitColor = outfitColor;
-        this.spriteId = this.gender === 'female' ? 'player-female' : 'player-male';
     }
 
     update(dt) {
         if (this.inVehicle) {
-            const vehicle = this.inVehicle;
-            const throttle = (this.input.up ? 1 : 0) - (this.input.down ? 1 : 0);
-            const steer = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
-            vehicle.controller = 'player';
-            vehicle.controlInput = {
-                throttle,
-                steer,
-                boost: this.input.sprint,
-            };
-            this.position.x = vehicle.position.x;
-            this.position.y = vehicle.position.y;
-            this.stamina = Math.min(100, this.stamina + dt * 15);
+            this.position.x = this.inVehicle.position.x;
+            this.position.y = this.inVehicle.position.y;
             return;
         }
 
@@ -79,32 +62,12 @@ export class PlayerController {
 
     enterVehicle(vehicle) {
         this.inVehicle = vehicle;
-        if (vehicle) {
-            vehicle.ai = 'player';
-            vehicle.controller = 'player';
-            vehicle.controlInput = { throttle: 0, steer: 0 };
-        }
     }
 
     exitVehicle() {
         if (this.inVehicle) {
-            this.inVehicle.ai = 'civilian';
-            this.inVehicle.controller = 'ai';
-            this.inVehicle.controlInput = null;
-            const exitHeading = this.inVehicle.heading + Math.PI / 2;
-            this.position = {
-                x: this.inVehicle.position.x + Math.cos(exitHeading) * (this.inVehicle.width ?? 18),
-                y: this.inVehicle.position.y + Math.sin(exitHeading) * (this.inVehicle.width ?? 18),
-            };
+            this.position = { ...this.inVehicle.position };
             this.inVehicle = null;
         }
-    }
-
-    setHitboxScale(scale = 1) {
-        this.radius = 9 * Math.max(0.5, scale);
-    }
-
-    getSpriteId() {
-        return this.spriteId;
     }
 }
