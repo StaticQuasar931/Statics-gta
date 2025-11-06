@@ -17,6 +17,8 @@ export class Renderer {
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.shadowMap.enabled = enableShadows;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.2;
 
     container.appendChild(this.renderer.domElement);
 
@@ -74,6 +76,10 @@ export class Renderer {
     if (typeof density === 'number') {
       this.scene.fog.density = density;
     }
+  }
+
+  setExposure(exposure) {
+    this.renderer.toneMappingExposure = exposure;
   }
 
   add(object) {

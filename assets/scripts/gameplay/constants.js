@@ -15,6 +15,18 @@ export const VEHICLE_SPEEDS = {
   boat: 70,
 };
 
+export const VEHICLE_VALUES = {
+  sedan: 22000,
+  'sports-car': 125000,
+  'muscle-car': 88000,
+  truck: 64000,
+  motorcycle: 42000,
+  'police-cruiser': 0,
+  'swat-van': 0,
+  helicopter: 250000,
+  boat: 90000,
+};
+
 export const VEHICLE_ACCELERATION = 45;
 export const VEHICLE_TURN_RATE = 1.6;
 export const PLAYER_WALK_SPEED = 28;

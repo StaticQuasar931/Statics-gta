@@ -109,7 +109,7 @@ export class UIManager {
         </div>
       </div>
       <div class="hud-prompts">
-        <span>Press <kbd>E</kbd> to interact · <kbd>Left Click / Tap</kbd> to fire · <kbd>Shift</kbd> to sprint</span>
+        <span>Press <kbd>E</kbd> to interact · <kbd>Left Click / Tap</kbd> to fire · <kbd>Shift</kbd> to sprint · Hold <kbd>Shift</kbd> + <kbd>E</kbd> in garages to sell</span>
       </div>
     `;
     this.root.appendChild(hud);

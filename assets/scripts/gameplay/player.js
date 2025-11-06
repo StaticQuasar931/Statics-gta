@@ -126,7 +126,7 @@ export class Player extends Entity {
     this.vehicle = null;
     const exitOffset = this.direction.clone().multiplyScalar(-4).add(new THREE.Vector3(0, 0, 4));
     const exitPosition = vehicle.mesh.position.clone().add(exitOffset.setY(0));
-    this.mesh.position.copy(exitPosition).setY(3);
+    this.mesh.position.copy(exitPosition).setY(1.2);
   }
 
   addMoney(amount) {

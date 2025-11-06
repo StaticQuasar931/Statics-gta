@@ -4,10 +4,11 @@ Neon Grandline is a fully interactive, browser-native tribute to open-world crim
 
 ## Why this build is special
 
-- **True 3D city streaming** – Instanced skyscrapers, layered road grids, and sky-lit fog all rendered with Three.js to keep performance smooth on Chrome, Firefox, Safari, and Edge.
+- **True 3D city streaming** – Procedural building meshes with neon signage, layered road grids, shader-driven sky, and sky-lit fog all rendered with Three.js to keep performance smooth on Chrome, Firefox, Safari, and Edge.
 - **100+ headline features** – Day/night, weather, vehicle theft, dealerships, loot drops, missions, responsive HUD, wanted escalation, replay-ready camera modes, and more (full checklist below).
 - **Dynamic systems everywhere** – Density sliders rebalance NPCs and traffic live, fidelity presets retarget pixel ratio, weather alters fog + lighting, and comfort modes reshape the chase camera.
 - **Browser-first UX** – Minimal HTML shell, progressive lobby, neon settings modal, toast-based feedback, and responsive layouts tuned for 1300×730, 1366×768, 1517×852, 1536×864, and 1920×1080.
+- **Procedural art safety net** – A runtime texture factory paints fallback assets for every building, vehicle, character, weapon, POI, and UI tile so nothing ever renders as a blank even if a network fetch fails.
 
 ## Quick start
 
@@ -38,18 +39,18 @@ Neon Grandline is a fully interactive, browser-native tribute to open-world crim
 5. Dynamic day/night cycle with sun orbit
 6. Exponential fog tuned per weather preset
 7. Procedural city grid with district density
-8. Ten bespoke building textures mapped onto 3D blocks
-9. Seamless ground plane with soft reflections
+8. Procedural building meshes with neon signage and emissive windows
+9. Shader-driven sky dome that shifts with time of day
 10. Road lattice carved between blocks
 11. Customizable sky themes (Neon, Sunset, Ice)
 12. Responsive pixel ratio based on fidelity slider
 13. Fixed-resolution viewport presets for five screen targets
-14. Instanced vehicle bodies using SVG textures
-15. Instanced character capsules with faction skins
+14. High-detail vehicle meshes with emissive headlights & clearcoat shading
+15. Stylized character rigs with glowing visors per faction
 16. Loot shards rendered with emissive glow
 17. Bullet trails via emissive spheres
-18. Police siren cues via material tinting
-19. Waterline shimmer through gradient fog
+18. Police response vehicles spawn with emissive siren cues
+19. ACES-Filmic tone mapping with adaptive exposure per theme
 20. Cinematic lobby backdrop with blur + bloom
 
 ### Player, camera, and movement
@@ -81,8 +82,8 @@ Neon Grandline is a fully interactive, browser-native tribute to open-world crim
 44. Refueling support at gas POIs
 45. Integrity (health) tracking for collision damage
 46. Repair hooks through garages/safehouses
-47. Vehicle ownership registry through dealership purchases
-48. Density scaling multiplies active traffic count
+47. Vehicle ownership registry plus upgrade tiers and tuning persistence
+48. Garage interactions support hold-Shift selling for instant payouts
 49. Police dispatch spawns new cruisers/vans as needed
 50. Remote despawn when density slider lowers traffic
 
@@ -106,7 +107,7 @@ Neon Grandline is a fully interactive, browser-native tribute to open-world crim
 
 ### Economy & missions
 67. Player wallet with earn/spend helpers
-68. Toast notifications for income and purchases
+68. Toast notifications for income, purchases, upgrades, and sales
 69. Eight POI shop types (safehouse, garage, bank, dealership, clothing, gas, weapons, market)
 70. Shop metadata powering UI icons & labels
 71. Safehouse purchase heals player and records ownership
@@ -120,7 +121,7 @@ Neon Grandline is a fully interactive, browser-native tribute to open-world crim
 79. Mission failure feedback via toast
 80. Transaction history stored in-memory
 81. Loot integrates with economy earnings
-82. Owned safehouses/vehicles tracked for theft checks
+82. Owned safehouses/vehicles tracked for theft checks and resale value
 83. Shop interactions gated by proximity radius
 
 ### UI & UX

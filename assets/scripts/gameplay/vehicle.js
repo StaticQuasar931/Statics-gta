@@ -9,6 +9,8 @@ export class Vehicle extends Entity {
     this.maxSpeed = VEHICLE_SPEEDS[id] ?? 60;
     this.acceleration = VEHICLE_ACCELERATION;
     this.turnRate = VEHICLE_TURN_RATE;
+    this.baseMaxSpeed = this.maxSpeed;
+    this.baseAcceleration = this.acceleration;
     this.speed = 0;
     this.heading = 0;
     this.driver = null;
@@ -17,6 +19,7 @@ export class Vehicle extends Entity {
     this.maxFuel = 100;
     this.integrity = 100;
     this.hitPoints = 120;
+    this.upgradeLevel = 0;
     this.throttleInput = 0;
     this.steerInput = 0;
     this.brakeInput = 0;
@@ -102,5 +105,14 @@ export class Vehicle extends Entity {
   takeDamage(amount) {
     super.takeDamage(amount);
     this.integrity = Math.max(0, this.integrity - amount * 0.8);
+  }
+
+  applyUpgrade(level) {
+    this.upgradeLevel = level;
+    this.maxSpeed = this.baseMaxSpeed * (1 + level * 0.12);
+    this.acceleration = this.baseAcceleration * (1 + level * 0.08);
+    this.turnRate = VEHICLE_TURN_RATE * (1 + level * 0.04);
+    this.maxFuel = 100 + level * 5;
+    this.integrity = Math.min(180, this.integrity + level * 6);
   }
 }

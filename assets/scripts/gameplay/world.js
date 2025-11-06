@@ -1,6 +1,7 @@
 import THREE from '../engine/three.js';
 import { Renderer } from '../engine/renderer.js';
 import { assetLoader } from '../engine/assetLoader.js';
+import { createBuildingMesh, createVehicleMesh, createCharacterMesh, createStreetLight } from '../engine/geometryFactory.js';
 import { InputManager } from '../core/input.js';
 import { Player } from './player.js';
 import { Vehicle } from './vehicle.js';
@@ -18,10 +19,32 @@ import {
   SHOP_TYPES,
   FEATURE_UNLOCKS,
 } from './constants.js';
-import { randomChoice, randomRange, seededRandom } from '../util/random.js';
+import { seededRandom } from '../util/random.js';
 
 const BULLET_SPEED = 380;
 const BULLET_LIFETIME = 2.5;
+
+const SKY_VERTEX = `
+  varying vec3 vWorldPosition;
+  void main() {
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+  }
+`;
+
+const SKY_FRAGMENT = `
+  varying vec3 vWorldPosition;
+  uniform vec3 topColor;
+  uniform vec3 bottomColor;
+  uniform float offset;
+  uniform float exponent;
+  void main() {
+    float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
+    float factor = max(pow(max(h, 0.0), exponent), 0.0);
+    gl_FragColor = vec4(mix(bottomColor, topColor, factor), 1.0);
+  }
+`;
 
 export class GameWorld {
   constructor(container, uiManager, settings = {}) {
@@ -38,6 +61,7 @@ export class GameWorld {
       theme: settings.theme ?? 'neon',
       comfort: settings.comfort ?? 'normal',
     };
+    this.accentColor = '#4df0ff';
 
     this.player = null;
     this.vehicles = [];
@@ -51,6 +75,7 @@ export class GameWorld {
     this.missions = null;
     this.police = null;
     this.cameraSmoothing = 0.12;
+    this.sky = null;
 
     this.dayTime = 9 * 60; // minutes
     this.timeScale = 24; // minutes per minute real-time
@@ -76,18 +101,45 @@ export class GameWorld {
   }
 
   _buildWorld() {
+    this._buildSky();
     this._buildGroundPlane();
     this._buildRoadGrid();
     this._buildCityBlocks();
   }
 
+  _buildSky() {
+    const geometry = new THREE.SphereGeometry(WORLD_SIZE * 1.4, 32, 32);
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        topColor: { value: new THREE.Color('#16315c') },
+        bottomColor: { value: new THREE.Color('#05070d') },
+        offset: { value: 80 },
+        exponent: { value: 0.55 },
+      },
+      vertexShader: SKY_VERTEX,
+      fragmentShader: SKY_FRAGMENT,
+      side: THREE.BackSide,
+      depthWrite: false,
+    });
+    const sky = new THREE.Mesh(geometry, material);
+    sky.position.y = -WORLD_SIZE * 0.12;
+    this.renderer.add(sky);
+    this.sky = sky;
+  }
+
   _buildGroundPlane() {
     const geometry = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 32, 32);
-    const material = new THREE.MeshStandardMaterial({ color: '#1a1f2c', roughness: 0.9, metalness: 0.02 });
+    const material = new THREE.MeshStandardMaterial({ color: '#1a1f2c', roughness: 0.85, metalness: 0.05 });
     const ground = new THREE.Mesh(geometry, material);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.renderer.add(ground);
+
+    const grid = new THREE.GridHelper(WORLD_SIZE, WORLD_SIZE / BLOCK_SIZE, '#1e293b', '#0f172a');
+    grid.material.transparent = true;
+    grid.material.opacity = 0.14;
+    grid.position.y = 0.05;
+    this.renderer.add(grid);
   }
 
   _buildRoadGrid() {
@@ -116,29 +168,41 @@ export class GameWorld {
   _buildCityBlocks() {
     const segments = WORLD_SIZE / BLOCK_SIZE;
     const buildingTextures = assetLoader.getSet('buildings');
+    const defaultTexture = buildingTextures[0]?.texture;
     for (let x = -segments / 2; x < segments / 2; x += 1) {
       for (let z = -segments / 2; z < segments / 2; z += 1) {
         const centerX = x * BLOCK_SIZE + BLOCK_SIZE / 2;
         const centerZ = z * BLOCK_SIZE + BLOCK_SIZE / 2;
-        const height = randomRange(...BUILDING_HEIGHT_RANGE);
-        const texture = randomChoice(buildingTextures).texture;
-        const geometry = new THREE.BoxGeometry(BLOCK_SIZE * 0.6, height, BLOCK_SIZE * 0.6);
-        const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.2, roughness: 0.7 });
-        const building = new THREE.Mesh(geometry, material);
-        building.position.set(centerX, height / 2, centerZ);
-        building.castShadow = true;
-        building.receiveShadow = true;
+        const width = BLOCK_SIZE * this._randomRange(0.45, 0.68);
+        const depth = BLOCK_SIZE * this._randomRange(0.45, 0.68);
+        const height = this._randomRange(...BUILDING_HEIGHT_RANGE);
+        const textureEntry = this._randomChoice(buildingTextures) ?? { texture: defaultTexture };
+        const building = createBuildingMesh({
+          width,
+          depth,
+          height,
+          texture: textureEntry?.texture,
+          themeColor: this.accentColor,
+          seed: this.random(),
+        });
+        building.position.set(centerX, 0, centerZ);
+        building.rotation.y = Math.floor(this.random() * 4) * (Math.PI / 2);
         this.renderer.add(building);
+
+        if (this.random() > 0.85) {
+          const lamp = createStreetLight({ height: this._randomRange(8, 14), color: this.accentColor, seed: this.random() });
+          lamp.position.set(centerX + width * 0.6, 0, centerZ + depth * 0.6);
+          this.renderer.add(lamp);
+        }
       }
     }
   }
 
   _spawnPlayer() {
-    const geometry = new THREE.CapsuleGeometry(1, 3, 8, 16);
-    const material = new THREE.MeshStandardMaterial({ color: '#58c4ff', metalness: 0.1, roughness: 0.6 });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.position.set(0, 3, 0);
+    const characterSet = assetLoader.getSet('characters');
+    const hero = characterSet.find((entry) => entry.key.includes('protagonist')) ?? characterSet[0];
+    const mesh = createCharacterMesh({ texture: hero?.texture, accentColor: this.accentColor, scale: 1.05 });
+    mesh.position.set(0, 0, 0);
     this.renderer.add(mesh);
     this.player = new Player({ mesh, input: this.input });
   }
@@ -146,36 +210,51 @@ export class GameWorld {
   _spawnTraffic(count) {
     const vehicleTextures = assetLoader.getSet('vehicles');
     const types = vehicleTextures.map((entry) => entry.key);
+    const defaultTexture = vehicleTextures[0]?.texture;
     const target = count ?? Math.max(0, Math.floor(24 * this.settings.density) - this.vehicles.length);
     const spawnCount = Math.max(0, target);
     for (let i = 0; i < spawnCount; i += 1) {
-      const type = randomChoice(types);
-      const geometry = new THREE.BoxGeometry(6, 3, 12);
-      const texture = assetLoader.getTexture('vehicles', type);
-      const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.5, roughness: 0.5 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
+      const type = this._randomChoice(types);
+      const textureEntry = vehicleTextures.find((entry) => entry.key === type) ?? { texture: defaultTexture };
+      const mesh = createVehicleMesh({ type, texture: textureEntry?.texture, themeColor: this.accentColor, seed: this.random() });
       const vehicle = new Vehicle({ mesh, id: type });
-      vehicle.setPosition(randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2), 1.5, randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2));
+      const heading = this._randomRange(0, Math.PI * 2);
+      vehicle.heading = heading;
+      mesh.rotation.y = -heading;
+      const spawnX = this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2);
+      const spawnZ = this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2);
+      vehicle.setPosition(spawnX, 0, spawnZ);
       this.renderer.add(mesh);
       this.vehicles.push(vehicle);
     }
+  }
+
+  _spawnOwnedVehicle(type) {
+    const vehicleTextures = assetLoader.getSet('vehicles');
+    const entry = vehicleTextures.find((item) => item.key === type) ?? vehicleTextures[0];
+    if (!entry) return null;
+    const mesh = createVehicleMesh({ type, texture: entry.texture, themeColor: this.accentColor, seed: this.random() });
+    const vehicle = new Vehicle({ mesh, id: type });
+    const reference = this.player?.mesh?.position ?? new THREE.Vector3();
+    const spawnX = reference.x + this._randomRange(-12, 12);
+    const spawnZ = reference.z + this._randomRange(-12, 12);
+    vehicle.setPosition(spawnX, 0, spawnZ);
+    vehicle.heading = this._randomRange(0, Math.PI * 2);
+    mesh.rotation.y = -vehicle.heading;
+    this.renderer.add(mesh);
+    this.vehicles.push(vehicle);
+    return vehicle;
   }
 
   _spawnNPCs(count) {
     const characterTextures = assetLoader.getSet('characters');
     const targetCount = count ?? Math.max(0, Math.floor(90 * this.settings.density) - this.npcs.length);
     for (let i = 0; i < targetCount; i += 1) {
-      const entry = randomChoice(characterTextures);
-      const geometry = new THREE.CapsuleGeometry(0.8, 2.4, 8, 12);
-      const material = new THREE.MeshStandardMaterial({ map: entry.texture, roughness: 0.65 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      const faction = entry.key.includes('cop') ? 'police' : entry.key.includes('gang') ? 'gang' : 'civilians';
+      const entry = this._randomChoice(characterTextures);
+      const mesh = createCharacterMesh({ texture: entry?.texture, accentColor: this.accentColor, scale: this._randomRange(0.9, 1.1) });
+      const faction = entry?.key?.includes('cop') ? 'police' : entry?.key?.includes('gang') ? 'gang' : 'civilians';
       const npc = new NPC({ mesh, faction });
-      npc.setPosition(randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2), 1.5, randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2));
+      npc.setPosition(this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2), 0, this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2));
       this.renderer.add(mesh);
       this.npcs.push(npc);
     }
@@ -198,9 +277,9 @@ export class GameWorld {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.rotation.x = -Math.PI / 2;
       const position = new THREE.Vector3(
-        ((index % segments) - segments / 2) * BLOCK_SIZE + randomRange(-20, 20),
+        ((index % segments) - segments / 2) * BLOCK_SIZE + this._randomRange(-20, 20),
         0.6,
-        (Math.floor(index / segments) - segments / 2) * BLOCK_SIZE + randomRange(-20, 20),
+        (Math.floor(index / segments) - segments / 2) * BLOCK_SIZE + this._randomRange(-20, 20),
       );
       mesh.position.copy(position);
       this.renderer.add(mesh);
@@ -261,6 +340,11 @@ export class GameWorld {
     this.renderer.updateSunPosition({ azimuth, elevation });
     const intensity = THREE.MathUtils.clamp(Math.sin(dayProgress * Math.PI) * 1.4, 0.1, 1.6);
     this.renderer.sunLight.intensity = intensity;
+    if (this.sky && this.sky.material && this.sky.material.uniforms) {
+      const uniforms = this.sky.material.uniforms;
+      uniforms.offset.value = 60 + Math.sin(dayProgress * Math.PI * 2) * 20;
+      uniforms.exponent.value = 0.45 + Math.cos(dayProgress * Math.PI * 2) * 0.1;
+    }
   }
 
   _updateDriving(delta) {
@@ -368,7 +452,7 @@ export class GameWorld {
     const lootMat = new THREE.MeshStandardMaterial({ color: '#33ffaa', emissive: '#119966' });
     const mesh = new THREE.Mesh(lootGeo, lootMat);
     mesh.position.copy(npc.mesh.position).add(new THREE.Vector3(0, 2, 0));
-    const amount = Math.floor(randomRange(...npc.dropMoneyRange));
+    const amount = Math.floor(this._randomRange(npc.dropMoneyRange[0], npc.dropMoneyRange[1]));
     const loot = new Loot({ mesh, amount });
     this.renderer.add(mesh);
     this.loot.push(loot);
@@ -404,9 +488,37 @@ export class GameWorld {
     if (shop.id === 'dealership') {
       const price = shop.prices.purchase;
       if (this.economy.purchase('vehicle', price, { shop: shop.id })) {
-        const type = randomChoice(['sports-car', 'muscle-car', 'sedan']);
+        const type = this._randomChoice(['sports-car', 'muscle-car', 'sedan']);
+        const vehicle = this._spawnOwnedVehicle(type);
         this.economy.registerOwnedVehicle(type);
         this.ui.showToast(`Unlocked ${type}`, 'success');
+        if (vehicle) {
+          this.ui.showToast(`${type} delivered to your location`, 'success');
+        }
+      }
+      return;
+    }
+    if (shop.id === 'garage') {
+      const activeVehicle = this.player.vehicle;
+      if (!activeVehicle) {
+        this.ui.showToast('Bring an owned vehicle into the garage to tune or sell it.', 'info');
+        return;
+      }
+      if (!this.economy.ownedVehicles.has(activeVehicle.id)) {
+        this.ui.showToast('Hot rides must be purchased before upgrades.', 'warning');
+        return;
+      }
+      if (this.input.isDown('shift')) {
+        const payout = this.economy.sellVehicle(activeVehicle);
+        if (payout > 0) {
+          this.player.exitVehicle();
+          this._removeVehicle(activeVehicle);
+        }
+        return;
+      }
+      const upgraded = this.economy.upgradeVehicle(activeVehicle);
+      if (!upgraded) {
+        this.ui.showToast('Hold shift to sell instead.', 'info');
       }
       return;
     }
@@ -418,7 +530,7 @@ export class GameWorld {
       return;
     }
     if (shop.id === 'weapons') {
-      const weapon = randomChoice(['rifle', 'shotgun', 'smg']);
+      const weapon = this._randomChoice(['rifle', 'shotgun', 'smg']);
       const price = shop.prices[weapon] ?? 2000;
       if (this.economy.purchase(weapon, price)) {
         this.player.equipWeapon(weapon);
@@ -448,14 +560,15 @@ export class GameWorld {
 
   dispatchPoliceUnits(response) {
     for (let i = 0; i < response.patrols; i += 1) {
-      const type = randomChoice(response.vehicles);
-      const geometry = new THREE.BoxGeometry(6, 3, 12);
+      const type = this._randomChoice(response.vehicles);
       const texture = assetLoader.getTexture('vehicles', type);
-      const material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.4, metalness: 0.6 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true;
+      const mesh = createVehicleMesh({ type, texture, themeColor: '#4d9bff', seed: this.random() });
       const vehicle = new Vehicle({ mesh, id: type });
-      vehicle.setPosition(randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2), 1.5, randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2));
+      const spawnX = this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2);
+      const spawnZ = this._randomRange(-WORLD_SIZE / 2, WORLD_SIZE / 2);
+      vehicle.setPosition(spawnX, 0, spawnZ);
+      vehicle.heading = this._randomRange(0, Math.PI * 2);
+      mesh.rotation.y = -vehicle.heading;
       this.renderer.add(mesh);
       this.vehicles.push(vehicle);
     }
@@ -463,13 +576,17 @@ export class GameWorld {
   }
 
   spawnPoliceBackup(npc) {
-    const type = randomChoice(['police-cruiser', 'swat-van']);
+    const type = this._randomChoice(['police-cruiser', 'swat-van']);
     const geometry = new THREE.BoxGeometry(6, 3, 12);
     const texture = assetLoader.getTexture('vehicles', type);
     const material = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.5 });
     const mesh = new THREE.Mesh(geometry, material);
     const vehicle = new Vehicle({ mesh, id: type });
-    vehicle.setPosition(npc.mesh.position.x + randomRange(-40, 40), 1.5, npc.mesh.position.z + randomRange(-40, 40));
+    vehicle.setPosition(
+      npc.mesh.position.x + this._randomRange(-40, 40),
+      0,
+      npc.mesh.position.z + this._randomRange(-40, 40),
+    );
     this.renderer.add(mesh);
     this.vehicles.push(vehicle);
     this.ui.showToast('Police backup inbound', 'warning');
@@ -479,6 +596,7 @@ export class GameWorld {
     Object.assign(this.settings, partial);
     const renderer = this.renderer.renderer;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * this.settings.fidelity);
+    this.accentColor = this._themeAccent(this.settings.theme);
     this._applyTheme(this.settings.theme);
     this.cameraSmoothing = this._comfortToSmoothing(this.settings.comfort);
     this._maintainPopulation();
@@ -495,9 +613,30 @@ export class GameWorld {
       sunset: 0.0025,
       ice: 0.0035,
     };
+    const exposureMap = {
+      neon: 1.18,
+      sunset: 1.05,
+      ice: 1.3,
+    };
+    const skyTopMap = {
+      neon: '#1a3c6d',
+      sunset: '#702f3d',
+      ice: '#3a6b9f',
+    };
+    const skyBottomMap = {
+      neon: '#05070d',
+      sunset: '#2a0d14',
+      ice: '#0d1d33',
+    };
     const color = colorMap[theme] ?? '#10131a';
     this.renderer.setBackgroundColor(color);
     this.renderer.setFog({ color, density: fogMap[theme] ?? 0.003 });
+    this.renderer.setExposure(exposureMap[theme] ?? 1.18);
+    if (this.sky && this.sky.material && this.sky.material.uniforms) {
+      const uniforms = this.sky.material.uniforms;
+      uniforms.topColor.value.set(skyTopMap[theme] ?? skyTopMap.neon);
+      uniforms.bottomColor.value.set(skyBottomMap[theme] ?? skyBottomMap.neon);
+    }
   }
 
   _comfortToSmoothing(mode) {
@@ -508,6 +647,17 @@ export class GameWorld {
         return 0.08;
       default:
         return 0.12;
+    }
+  }
+
+  _themeAccent(theme) {
+    switch (theme) {
+      case 'sunset':
+        return '#ff8a5c';
+      case 'ice':
+        return '#6dcff6';
+      default:
+        return '#4df0ff';
     }
   }
 
@@ -531,5 +681,24 @@ export class GameWorld {
         this.renderer.remove(vehicle.mesh);
       }
     }
+  }
+
+  _removeVehicle(vehicle) {
+    if (!vehicle) return;
+    const index = this.vehicles.indexOf(vehicle);
+    if (index >= 0) {
+      this.vehicles.splice(index, 1);
+    }
+    this.renderer.remove(vehicle.mesh);
+  }
+
+  _randomChoice(list) {
+    if (!list || list.length === 0) return null;
+    const index = Math.floor(this.random() * list.length);
+    return list[index];
+  }
+
+  _randomRange(min, max) {
+    return this.random() * (max - min) + min;
   }
 }
