@@ -1,147 +1,129 @@
-import { AssetLibrary } from './core/assetLibrary.js';
-import { UIManager } from './core/uiManager.js';
-import { GameWorld } from './game/world.js';
+import { UIManager } from './ui/uiManager.js';
+import { GameWorld } from './gameplay/world.js';
 
-const root = document.getElementById('app');
-const assets = new AssetLibrary();
-const ui = new UIManager(root, assets);
+export class App {
+  constructor(root) {
+    this.root = root;
+    this.canvasHost = document.createElement('div');
+    this.canvasHost.className = 'canvas-host';
+    this.uiLayer = document.createElement('div');
+    this.uiLayer.className = 'ui-layer';
+    this.root.append(this.canvasHost, this.uiLayer);
 
-const startupMessage = 'Loading illustrated city assets…';
-const loadingToast = document.createElement('div');
-loadingToast.className = 'toast active';
-loadingToast.textContent = startupMessage;
-root.appendChild(loadingToast);
+    this.ui = new UIManager(this.uiLayer);
 
-assets
-    .loadAll()
-    .then(() => {
-        if (loadingToast.parentElement === root) {
-            root.removeChild(loadingToast);
-        }
-        ui.init();
-        const game = new GameWorld(ui, assets);
-        ui.setSettings(game.settings);
-        bindUi(game);
-        run(game);
-    })
-    .catch((error) => {
-        console.error(error);
-        loadingToast.textContent = 'Failed to load art assets. Reload to try again.';
+    this.world = null;
+    this.loopHandle = 0;
+    this.running = false;
+    this.settings = {
+      fidelity: 1,
+      density: 1,
+      theme: 'neon',
+      comfort: 'normal',
+    };
+
+    this._bindUI();
+  }
+
+  async start() {
+    if (this.world) {
+      this.stop();
+    }
+    this.world = new GameWorld(this.canvasHost, this.ui, this.settings);
+    await this.world.init(Date.now());
+    this.ui.hideLobby();
+    this.ui.showHUD();
+    this.running = true;
+    this._loop();
+    this.ui.showToast('Welcome back to Neon Grandline, StaticQuasar931!', 'success');
+  }
+
+  stop() {
+    this.running = false;
+    cancelAnimationFrame(this.loopHandle);
+    this.world?.destroy();
+    this.canvasHost.innerHTML = '';
+    this.world = null;
+  }
+
+  _loop() {
+    if (!this.running || !this.world) return;
+    this.world.renderer.render((delta) => {
+      this.world.update(delta);
+    });
+    this.loopHandle = requestAnimationFrame(() => this._loop());
+  }
+
+  _bindUI() {
+    this.ui.bindActions(async (action) => {
+      switch (action) {
+        case 'start':
+          await this.start();
+          break;
+        case 'mission':
+          if (!this.world) {
+            await this.start();
+          }
+          this.world.missions?.rollMission();
+          break;
+        case 'settings':
+          this.ui.toggleSettings(true);
+          break;
+        case 'close-settings':
+          this.ui.toggleSettings(false);
+          break;
+        default:
+          break;
+      }
     });
 
-function bindUi(game) {
-    const { buttons, inputs } = ui;
-
-    buttons['new-game']?.addEventListener('click', () => {
-        ui.setScreen('character');
+    this.ui.settingsPanel.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) && !(target instanceof HTMLSelectElement)) return;
+      const setting = target.dataset.setting;
+      if (!setting) return;
+      const value = target.type === 'range' ? parseFloat(target.value) : target.value;
+      this._applySetting(setting, value);
     });
 
-    buttons['back-to-menu']?.addEventListener('click', () => {
-        ui.setScreen('startup');
+    this.ui.bindResolution((resolution) => {
+      const [width, height] = resolution.split('x').map((value) => Number.parseInt(value, 10));
+      this._applyResolutionPreset(width, height);
     });
+  }
 
-    buttons['confirm-character']?.addEventListener('click', () => {
-        const name = (inputs.name.value || 'Runner').trim();
-        const gender = inputs.gender.value === 'random' ? (Math.random() > 0.5 ? 'male' : 'female') : inputs.gender.value;
-        const selectedBackground = inputs.background.selectedOptions[0];
-        const weapon = selectedBackground?.value ?? 'pistol';
-        const cash = Number(selectedBackground?.dataset.cash ?? 500);
-        const accent = inputs.accent.value;
-        document.documentElement.style.setProperty('--accent', accent);
-        document.documentElement.style.setProperty('--accent-strong', accent);
-        const settings = ui.getSettings();
-        game.configure(settings);
-        game.startNewGame({ name, gender, weapon, cash });
-        ui.showSettings(false);
-        ui.showGallery(false);
-    });
+  _applySetting(setting, value) {
+    if (setting === 'fidelity') {
+      this.settings.fidelity = value;
+    } else if (setting === 'density') {
+      this.settings.density = value;
+    } else if (setting === 'theme') {
+      this.settings.theme = value;
+    } else if (setting === 'comfort') {
+      this.settings.comfort = value;
+    }
+    if (this.world) {
+      this.world.applySettings(this.settings);
+      this.ui.showToast(`Applied ${setting} → ${value}`, 'info');
+    }
+  }
 
-    buttons['load-game']?.addEventListener('click', () => {
-        ui.setSettings(game.settings);
-        if (game.loadFromSave()) {
-            const settings = game.settings;
-            ui.setSettings(settings);
-        }
-    });
-
-    buttons['open-gallery']?.addEventListener('click', () => {
-        ui.showGallery(true);
-    });
-
-    buttons['pause-gallery']?.addEventListener('click', () => {
-        ui.showGallery(true);
-    });
-
-    buttons['close-gallery']?.addEventListener('click', () => {
-        ui.showGallery(false);
-    });
-
-    buttons['open-settings']?.addEventListener('click', () => {
-        ui.setSettings(game.settings);
-        ui.showSettings(true);
-    });
-
-    buttons['pause-settings']?.addEventListener('click', () => {
-        ui.setSettings(game.settings);
-        ui.showSettings(true);
-    });
-
-    buttons['close-settings']?.addEventListener('click', () => {
-        ui.showSettings(false);
-    });
-
-    buttons['apply-settings']?.addEventListener('click', () => {
-        const newSettings = ui.getSettings();
-        ui.setSettings(newSettings);
-        game.configure(newSettings);
-        ui.showToast('Settings applied.');
-    });
-
-    buttons['resume-game']?.addEventListener('click', () => {
-        game.togglePause(false);
-    });
-
-    buttons['save-game']?.addEventListener('click', () => {
-        game.saveGame();
-    });
-
-    buttons['quit-to-menu']?.addEventListener('click', () => {
-        game.togglePause(false);
-        game.reset();
-        ui.setScreen('startup');
-        ui.showSettings(false);
-        ui.showGallery(false);
-        ui.showPause(false);
-        ui.showToast('Returned to lobby.');
-    });
-
-    window.addEventListener('keydown', (event) => {
-        if (
-            game.state === 'playing' &&
-            ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)
-        ) {
-            event.preventDefault();
-        }
-        if (event.code === 'KeyP' && game.state === 'playing') {
-            game.togglePause(!game.paused);
-        }
-        if (event.code === 'Escape' && game.state === 'playing') {
-            game.togglePause(!game.paused);
-        }
-        if (event.code === 'KeyM' && game.state === 'playing') {
-            ui.showGallery(true);
-        }
-    });
+  _applyResolutionPreset(width, height) {
+    this.canvasHost.style.setProperty('--target-width', `${width}px`);
+    this.canvasHost.style.setProperty('--target-height', `${height}px`);
+    if (!this.canvasHost.classList.contains('fixed-resolution')) {
+      this.canvasHost.classList.add('fixed-resolution');
+    }
+    this.ui.showToast(`Viewport set to ${width}×${height}`);
+  }
 }
 
-function run(game) {
-    let lastTime = performance.now();
-    const step = (timestamp) => {
-        const delta = Math.min((timestamp - lastTime) / 1000, 0.05);
-        lastTime = timestamp;
-        game.update(delta);
-        game.draw();
-        requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+export async function bootstrap() {
+  const root = document.getElementById('app');
+  const app = new App(root);
+  window.gameApp = app;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    app.settings.comfort = 'steady';
+  }
+  return app;
 }

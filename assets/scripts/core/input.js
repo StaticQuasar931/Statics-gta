@@ -1,91 +1,126 @@
+const MOBILE_BREAKPOINT = 840;
+
 export class InputManager {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.keys = new Map();
-        this.presses = new Set();
-        this.pointer = { x: canvas.width / 2, y: canvas.height / 2, down: false };
-        this.primaryDownHandlers = new Set();
-        this.primaryUpHandlers = new Set();
-        this.boundKeyDown = (event) => this.onKeyDown(event);
-        this.boundKeyUp = (event) => this.onKeyUp(event);
-        this.boundPointerDown = (event) => this.onPointerDown(event);
-        this.boundPointerUp = (event) => this.onPointerUp(event);
-        this.boundPointerMove = (event) => this.onPointerMove(event);
-    }
+  constructor(target = window) {
+    this.target = target;
+    this.keysDown = new Set();
+    this.keysPressed = new Set();
+    this.pointer = { x: 0, y: 0, down: false };
+    this.listeners = new Map();
+    this.touchMode = matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+    this._bind();
+  }
 
-    attach() {
-        window.addEventListener('keydown', this.boundKeyDown);
-        window.addEventListener('keyup', this.boundKeyUp);
-        this.canvas.addEventListener('mousedown', this.boundPointerDown);
-        window.addEventListener('mouseup', this.boundPointerUp);
-        window.addEventListener('mousemove', this.boundPointerMove);
-    }
+  _bind() {
+    const down = (event) => {
+      this.keysDown.add(event.key.toLowerCase());
+      this.keysPressed.add(event.key.toLowerCase());
+    };
 
-    detach() {
-        window.removeEventListener('keydown', this.boundKeyDown);
-        window.removeEventListener('keyup', this.boundKeyUp);
-        this.canvas.removeEventListener('mousedown', this.boundPointerDown);
-        window.removeEventListener('mouseup', this.boundPointerUp);
-        window.removeEventListener('mousemove', this.boundPointerMove);
-    }
+    const up = (event) => {
+      this.keysDown.delete(event.key.toLowerCase());
+    };
 
-    onKeyDown(event) {
-        if (!event.repeat) {
-            this.presses.add(event.code);
-        }
-        this.keys.set(event.code, true);
-    }
+    const move = (event) => {
+      this.pointer.x = event.clientX;
+      this.pointer.y = event.clientY;
+    };
 
-    onKeyUp(event) {
-        this.keys.set(event.code, false);
-        this.presses.delete(event.code);
-    }
+    const pointerDown = (event) => {
+      this.pointer.down = true;
+      this.pointer.x = event.clientX;
+      this.pointer.y = event.clientY;
+      this.keysPressed.add('pointer');
+    };
 
-    onPointerDown(event) {
-        if (event.button === 0) {
-            this.pointer.down = true;
-            this.updatePointerPosition(event);
-            this.primaryDownHandlers.forEach((handler) => handler(this.pointer));
-        }
-    }
+    const pointerUp = () => {
+      this.pointer.down = false;
+    };
 
-    onPointerUp(event) {
-        if (event.button === 0) {
-            this.pointer.down = false;
-            this.updatePointerPosition(event);
-            this.primaryUpHandlers.forEach((handler) => handler(this.pointer));
-        }
-    }
+    const touchStart = (event) => {
+      this.pointer.down = true;
+      const touch = event.touches[0];
+      if (touch) {
+        this.pointer.x = touch.clientX;
+        this.pointer.y = touch.clientY;
+      }
+      this.keysPressed.add('touch');
+    };
 
-    onPointerMove(event) {
-        this.updatePointerPosition(event);
-    }
+    const touchMove = (event) => {
+      const touch = event.touches[0];
+      if (touch) {
+        this.pointer.x = touch.clientX;
+        this.pointer.y = touch.clientY;
+      }
+    };
 
-    updatePointerPosition(event) {
-        const rect = this.canvas.getBoundingClientRect();
-        this.pointer.x = ((event.clientX - rect.left) / rect.width) * this.canvas.width;
-        this.pointer.y = ((event.clientY - rect.top) / rect.height) * this.canvas.height;
-    }
+    const touchEnd = () => {
+      this.pointer.down = false;
+    };
 
-    isKeyDown(code) {
-        return this.keys.get(code) === true;
-    }
+    this._down = down;
+    this._up = up;
+    this._move = move;
+    this._pointerDown = pointerDown;
+    this._pointerUp = pointerUp;
+    this._touchStart = touchStart;
+    this._touchMove = touchMove;
+    this._touchEnd = touchEnd;
 
-    consume(code) {
-        if (this.presses.has(code)) {
-            this.presses.delete(code);
-            return true;
-        }
-        return false;
-    }
+    this.target.addEventListener('keydown', down);
+    this.target.addEventListener('keyup', up);
+    this.target.addEventListener('mousemove', move);
+    this.target.addEventListener('pointerdown', pointerDown);
+    this.target.addEventListener('pointerup', pointerUp);
+    this.target.addEventListener('touchstart', touchStart, { passive: true });
+    this.target.addEventListener('touchmove', touchMove, { passive: true });
+    this.target.addEventListener('touchend', touchEnd);
+  }
 
-    onPrimaryDown(handler) {
-        this.primaryDownHandlers.add(handler);
-        return () => this.primaryDownHandlers.delete(handler);
-    }
+  resetFrame() {
+    this.keysPressed.clear();
+  }
 
-    onPrimaryUp(handler) {
-        this.primaryUpHandlers.add(handler);
-        return () => this.primaryUpHandlers.delete(handler);
+  isDown(key) {
+    return this.keysDown.has(key.toLowerCase());
+  }
+
+  wasPressed(key) {
+    return this.keysPressed.has(key.toLowerCase());
+  }
+
+  addListener(type, callback) {
+    if (!this.listeners.has(type)) {
+      this.listeners.set(type, new Set());
     }
+    this.listeners.get(type).add(callback);
+    return () => this.removeListener(type, callback);
+  }
+
+  emit(type, payload) {
+    const handlers = this.listeners.get(type);
+    if (!handlers) return;
+    for (const handler of handlers) {
+      handler(payload);
+    }
+  }
+
+  removeListener(type, callback) {
+    const handlers = this.listeners.get(type);
+    if (!handlers) return;
+    handlers.delete(callback);
+  }
+
+  destroy() {
+    this.target.removeEventListener('keydown', this._down);
+    this.target.removeEventListener('keyup', this._up);
+    this.target.removeEventListener('mousemove', this._move);
+    this.target.removeEventListener('pointerdown', this._pointerDown);
+    this.target.removeEventListener('pointerup', this._pointerUp);
+    this.target.removeEventListener('touchstart', this._touchStart);
+    this.target.removeEventListener('touchmove', this._touchMove);
+    this.target.removeEventListener('touchend', this._touchEnd);
+    this.listeners.clear();
+  }
 }
