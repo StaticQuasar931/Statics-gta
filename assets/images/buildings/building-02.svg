@@ -1,0 +1,36 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>
+  <defs>
+    <linearGradient id='grad-1' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0%' stop-color='#1b2a49' />
+      <stop offset='100%' stop-color='#4f5d75' />
+    </linearGradient>
+  </defs>
+  <rect x='0' y='0' width='200' height='200' fill='#0b0e1a'/>
+  <g transform='translate(40,20)'>
+    <rect x='0' y='26' width='120' height='130' rx='6' fill='url(#grad-1)'/>
+    <rect x='20' y='18' width='80' height='12' rx='6' fill='#f9f7f3' opacity='0.85'/>
+    <g fill='#f3a712'>
+      <rect x='16.0' y='41.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='40.0' y='41.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='64.0' y='41.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='88.0' y='41.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='16.0' y='63.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='40.0' y='63.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='64.0' y='63.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='88.0' y='63.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='16.0' y='85.0' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='40.0' y='85.0' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='64.0' y='85.0' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='88.0' y='85.0' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='16.0' y='106.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='40.0' y='106.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='64.0' y='106.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='88.0' y='106.7' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='16.0' y='128.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='40.0' y='128.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='64.0' y='128.3' width='16' height='12' rx='2' opacity='0.7'/>
+      <rect x='88.0' y='128.3' width='16' height='12' rx='2' opacity='0.7'/>
+    </g>
+  </g>
+  <text x='100' y='188' text-anchor='middle' font-family='Segoe UI, sans-serif' font-size='12' fill='rgba(255,255,255,0.65)'>Residential Tower</text>
+</svg>
