@@ -11,6 +11,7 @@ Static's Escape Road is a browser-based top-down sandbox prototype inspired by G
 - **Economy & Progression**: Missions, rewards, shops, and property hooks backed by a simple economy system.
 - **NPC Ecosystem**: Pedestrians, gangs, and police units reacting dynamically to the player.
 - **Asset-driven Rendering**: Canvas layers pull directly from the curated SVG library so every vehicle, character, and building block matches its concept art.
+- **Iconic Landmarks**: Safehouses, garages, and every shop category now render with bespoke POI icons pulled from the dedicated SVG set.
 - **UI & Flow**: Startup, character creation, HUD overlays, minimap, pause menu, interaction prompts, vehicle dashboard, and concept art gallery.
 - **Polished Settings**: Graphics presets, day/night pacing, weather intensity, density sliders, hitbox debug overlay, and reduced motion toggle.
 - **Concept Art Library**: Dedicated SVG placeholders for 10 building archetypes, vehicles, weapons, police gear, and characters.
@@ -19,7 +20,7 @@ Static's Escape Road is a browser-based top-down sandbox prototype inspired by G
 ## Settings & Controls
 
 - **Movement**: `WASD`/arrow keys, `Shift` to sprint (or boost when driving), `Space` or mouse to fire.
-- **Vehicles**: Walk near a car and press `E` to hop in, `E` again to exit alongside the curb.
+- **Vehicles**: Walk near a car and press `E` to hop in, `E` again to exit alongside the curb. High wanted levels trigger SWAT roadblocks that use the same art as their in-game counterparts.
 - Open **Settings** from the title screen or pause menu to adjust visual quality, weather intensity, day/night cycle length, traffic and pedestrian density, or to show hitboxes.
 - Toggle **Reduced Motion** to tone down weather streaks and keep the camera steady for sensitive players.
 - A concept art gallery is available from both the title screen and pause menu; closing it returns you to the previous state.
@@ -37,6 +38,7 @@ index.html
 assets/
   images/
     buildings/   # Ten unique building SVG modules
+    poi/         # Safehouse, garage, and shop category markers
     vehicles/    # Civilian, emergency, and specialty vehicle art
     weapons/     # Firearm & explosive iconography
     characters/  # Protagonists and NPC archetypes

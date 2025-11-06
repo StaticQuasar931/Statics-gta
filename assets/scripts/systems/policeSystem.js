@@ -11,6 +11,7 @@ export class PoliceSystem {
         this.dispatchTimer = 0;
         this.lastKnownPosition = null;
         this.helicopter = null;
+        this.roadblocks = [];
     }
 
     update(dt, playerPosition) {
@@ -45,6 +46,12 @@ export class PoliceSystem {
         }
 
         this.npcManager.alertPolice(pursuitTarget, this.wantedLevel);
+        this._pruneRoadblocks();
+        if (this.wantedLevel >= 4) {
+            this._maintainRoadblocks(pursuitTarget);
+        } else if (this.roadblocks.length) {
+            this._clearRoadblocks();
+        }
     }
 
     reportGunshot(position) {
@@ -119,5 +126,49 @@ export class PoliceSystem {
                 width: 40,
             });
         }
+    }
+
+    _maintainRoadblocks(playerPosition) {
+        const desired = 2;
+        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+        const bounds = { minX: 60, minY: 60, maxX: 1220, maxY: 660 };
+        while (this.roadblocks.length < desired) {
+            const offsetAngle = (Math.PI / desired) * this.roadblocks.length + Math.random() * 0.5;
+            const distance = 240 + Math.random() * 90;
+            const spawn = {
+                x: clamp(playerPosition.x + Math.cos(offsetAngle) * distance, bounds.minX, bounds.maxX),
+                y: clamp(playerPosition.y + Math.sin(offsetAngle) * distance, bounds.minY, bounds.maxY),
+            };
+            const blocker = this.vehicleManager.spawnVehicle({
+                type: 'swat',
+                spriteId: 'swat',
+                color: '#2d3436',
+                position: spawn,
+                heading: offsetAngle + Math.PI / 2,
+                ai: 'parked',
+                maxSpeed: 0,
+                acceleration: 0,
+                handling: 0.02,
+                displayName: 'SWAT Roadblock',
+                length: 52,
+                width: 24,
+            });
+            blocker.velocity.x = 0;
+            blocker.velocity.y = 0;
+            this.roadblocks.push(blocker.id);
+        }
+    }
+
+    _pruneRoadblocks() {
+        if (!this.roadblocks.length) return;
+        const activeIds = new Set(this.vehicleManager.vehicles.map((veh) => veh.id));
+        this.roadblocks = this.roadblocks.filter((id) => activeIds.has(id));
+    }
+
+    _clearRoadblocks() {
+        for (const id of this.roadblocks) {
+            this.vehicleManager.removeVehicle(id);
+        }
+        this.roadblocks = [];
     }
 }

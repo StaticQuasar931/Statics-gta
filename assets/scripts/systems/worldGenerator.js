@@ -113,10 +113,10 @@ export class WorldGenerator {
         const safehouses = [];
         for (const block of city.blocks) {
             if (block.type === 'building' && this.random() < 0.05) {
-                garages.push({ x: block.x, y: block.y });
+                garages.push({ x: block.x, y: block.y, type: 'garage', icon: 'garage' });
             }
             if (block.type === 'building' && this.random() < 0.04) {
-                safehouses.push({ x: block.x, y: block.y });
+                safehouses.push({ x: block.x, y: block.y, type: 'safehouse', icon: 'safehouse' });
             }
         }
         return {
@@ -135,6 +135,11 @@ export class WorldGenerator {
                 x: block.x,
                 y: block.y,
                 type: categories[Math.floor(this.random() * categories.length)],
+            }))
+            .map((shop) => ({
+                ...shop,
+                slug: shop.type.toLowerCase(),
+                icon: `shop-${shop.type.toLowerCase()}`,
             }));
     }
 

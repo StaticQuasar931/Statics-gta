@@ -32,9 +32,14 @@ export class AssetLibrary {
             default: `${BASE_PATH}/characters/npc-civilian.svg`,
         };
         this.poiMap = {
-            safehouse: `${BASE_PATH}/buildings/building-06.svg`,
-            garage: `${BASE_PATH}/buildings/building-05.svg`,
-            shop: `${BASE_PATH}/buildings/building-08.svg`,
+            safehouse: `${BASE_PATH}/poi/poi-safehouse.svg`,
+            garage: `${BASE_PATH}/poi/poi-garage.svg`,
+            'shop-weapons': `${BASE_PATH}/poi/poi-shop-weapons.svg`,
+            'shop-cars': `${BASE_PATH}/poi/poi-shop-cars.svg`,
+            'shop-gas': `${BASE_PATH}/poi/poi-shop-gas.svg`,
+            'shop-bank': `${BASE_PATH}/poi/poi-shop-bank.svg`,
+            'shop-clothing': `${BASE_PATH}/poi/poi-shop-clothing.svg`,
+            'shop-generic': `${BASE_PATH}/poi/poi-shop-generic.svg`,
         };
         this.weaponMap = {
             pistol: `${BASE_PATH}/weapons/pistol.svg`,
@@ -102,11 +107,14 @@ export class AssetLibrary {
     }
 
     getPOISprite(type) {
-        return this._getImage(this.poiMap[type]);
+        const key = this._normalizePOIKey(type);
+        if (!key) return null;
+        return this._getImage(this.poiMap[key]);
     }
 
     getPOIPath(type) {
-        return this.poiMap[type];
+        const key = this._normalizePOIKey(type);
+        return key ? this.poiMap[key] : null;
     }
 
     getWeaponSprite(id) {
@@ -158,5 +166,27 @@ export class AssetLibrary {
             });
         this.pending.set(path, promise);
         return promise;
+    }
+
+    _normalizePOIKey(type) {
+        if (!type) return null;
+        const toKey = (value) =>
+            value
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .trim();
+        let key = typeof type === 'string' ? type.toLowerCase() : String(type);
+        key = toKey(key);
+        if (this.poiMap[key]) {
+            return key;
+        }
+        const shopKey = `shop-${key}`;
+        if (this.poiMap[shopKey]) {
+            return shopKey;
+        }
+        if (key.startsWith('shop-')) {
+            return 'shop-generic';
+        }
+        return null;
     }
 }

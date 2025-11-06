@@ -64,10 +64,10 @@ export class UIManager {
         if (!this.hudElements.interaction) return;
         if (!text) {
             this.hudElements.interaction.classList.add('hidden');
-            this.hudElements.interaction.textContent = '';
+            this.hudElements.interaction.innerHTML = '';
             return;
         }
-        this.hudElements.interaction.textContent = text;
+        this.hudElements.interaction.innerHTML = text;
         this.hudElements.interaction.classList.remove('hidden');
     }
 }

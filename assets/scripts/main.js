@@ -445,22 +445,33 @@ function drawPointsOfInterest() {
     const blockSize = 40;
     const offsetX = canvas.width / 2 - (world.city.size * blockSize) / 2;
     const offsetY = canvas.height / 2 - (world.city.size * blockSize) / 2;
-    const safehouseIcon = assets.getPOISprite('safehouse');
-    const garageIcon = assets.getPOISprite('garage');
-    const shopIcon = assets.getPOISprite('shop');
-    const drawIcon = (poi, icon, fallbackColor, size = 20) => {
+    const drawIcon = (poi, sprite, fallbackColor, size = 20) => {
         const x = offsetX + poi.x * blockSize + blockSize / 2 - size / 2;
         const y = offsetY + poi.y * blockSize + blockSize / 2 - size / 2;
-        if (icon instanceof HTMLImageElement) {
-            ctx.drawImage(icon, x, y, size, size);
+        if (sprite instanceof HTMLImageElement) {
+            ctx.drawImage(sprite, x, y, size, size);
         } else {
             ctx.fillStyle = fallbackColor;
             ctx.fillRect(x, y, size, size);
         }
     };
-    world.pointsOfInterest.safehouses.forEach((poi) => drawIcon(poi, safehouseIcon, '#ffeaa7'));
-    world.pointsOfInterest.garages.forEach((poi) => drawIcon(poi, garageIcon, '#fdcb6e'));
-    world.pointsOfInterest.shops.forEach((poi) => drawIcon(poi, shopIcon, '#00cec9'));
+    const renderGroup = (items, fallbackKey, fallbackColor) => {
+        items.forEach((poi) => {
+            const desiredKey =
+                poi.icon ||
+                (fallbackKey.startsWith('shop')
+                    ? `shop-${slugify(poi.type || poi.slug || '')}`
+                    : slugify(poi.type || '') || fallbackKey);
+            const sprite =
+                assets.getPOISprite(desiredKey) ||
+                assets.getPOISprite(fallbackKey) ||
+                null;
+            drawIcon(poi, sprite, fallbackColor, poi.size ?? 20);
+        });
+    };
+    renderGroup(world.pointsOfInterest.safehouses ?? [], 'safehouse', '#ffeaa7');
+    renderGroup(world.pointsOfInterest.garages ?? [], 'garage', '#fdcb6e');
+    renderGroup(world.pointsOfInterest.shops ?? [], 'shop-generic', '#00cec9');
 }
 
 function drawSky() {
@@ -661,6 +672,16 @@ function getVehicleName(vehicle) {
     );
 }
 
+function slugify(value = '') {
+    return value
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .trim();
+}
+
 function handleInteractionPrompts() {
     if (
         !vehicleManager ||
@@ -675,7 +696,9 @@ function handleInteractionPrompts() {
     }
     if (playerController.inVehicle) {
         nearestVehicle = playerController.inVehicle;
-        ui.showInteractionHint(`Press E to exit ${getVehicleName(playerController.inVehicle)}`);
+        ui.showInteractionHint(
+            `<span class="keycap">E</span><span>Exit ${getVehicleName(playerController.inVehicle)}</span>`,
+        );
         return;
     }
     let closest = null;
@@ -694,7 +717,9 @@ function handleInteractionPrompts() {
     }
     nearestVehicle = closest;
     if (closest) {
-        ui.showInteractionHint(`Press E to enter ${getVehicleName(closest)}`);
+        ui.showInteractionHint(
+            `<span class="keycap">E</span><span>Enter ${getVehicleName(closest)}</span>`,
+        );
     } else {
         ui.showInteractionHint('');
     }

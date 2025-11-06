@@ -58,8 +58,13 @@ export class VehicleManager {
                 this._applyPlayerControl(vehicle, dt);
             } else {
                 this._applyAI(vehicle, playerPosition);
-                vehicle.velocity.x += Math.cos(vehicle.heading) * vehicle.acceleration * dt;
-                vehicle.velocity.y += Math.sin(vehicle.heading) * vehicle.acceleration * dt;
+                if (vehicle.ai !== 'parked') {
+                    vehicle.velocity.x += Math.cos(vehicle.heading) * vehicle.acceleration * dt;
+                    vehicle.velocity.y += Math.sin(vehicle.heading) * vehicle.acceleration * dt;
+                } else {
+                    vehicle.velocity.x *= 0.9;
+                    vehicle.velocity.y *= 0.9;
+                }
             }
 
             // Clamp to max speed (|v| < maxSpeed)
