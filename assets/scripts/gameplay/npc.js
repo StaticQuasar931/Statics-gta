@@ -1,72 +1,76 @@
-import THREE from '../engine/three.js';
-import { Entity } from './entity.js';
-import { randomChoice, randomRange } from '../util/random.js';
+import { clamp } from '../engine/math.js';
 
-const FACTIONS = ['civilians', 'gang', 'police'];
+const WALK_SPEED = 12;
 
-export class NPC extends Entity {
-  constructor({ mesh, faction = 'civilians', mood = 'calm' }) {
-    super({ mesh, type: 'npc', radius: 1, height: 1.8 });
+export class NPC {
+  constructor(node, { faction = 'civilian', mood = 'calm' } = {}) {
+    this.node = node;
+    this.position = { x: 0, y: 0, z: 0 };
+    this.heading = Math.random() * Math.PI * 2;
+    this.speed = WALK_SPEED * (0.7 + Math.random() * 0.6);
     this.faction = faction;
     this.mood = mood;
-    this.state = 'idle';
-    this.stateTimer = randomRange(1, 6);
-    this.speed = faction === 'police' ? 32 : 18;
-    this.weapon = faction === 'police' ? 'rifle' : 'pistol';
-    this.alertness = faction === 'police' ? 1 : 0.5;
-    this.dropMoneyRange = [50, 500];
-    this.targetPosition = this.mesh.position.clone();
+    this.health = 60;
+    this.dead = false;
+    this.timer = 0;
+  }
+
+  setPosition(x, y, z) {
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    if (this.node) {
+      this.node.position.x = x;
+      this.node.position.y = y;
+      this.node.position.z = z;
+      this.node.rotation.y = this.heading;
+    }
   }
 
   update(delta, world) {
-    if (!this.isAlive) return;
-    this.stateTimer -= delta;
-    if (this.stateTimer <= 0) {
-      this._chooseNewState();
+    if (this.dead) return;
+    this.timer -= delta;
+    if (this.timer <= 0) {
+      this.heading += (Math.random() - 0.5) * Math.PI * 0.5;
+      this.timer = 2 + Math.random() * 4;
     }
-    if (this.state === 'walking') {
-      const direction = this.targetPosition.clone().sub(this.mesh.position);
-      direction.y = 0;
-      if (direction.lengthSq() > 1) {
-        direction.normalize();
-        this.velocity.copy(direction.multiplyScalar(this.speed));
-        const lookTarget = this.mesh.position.clone().add(direction);
-        this.mesh.lookAt(lookTarget.x, this.mesh.position.y, lookTarget.z);
-      } else {
-        this.velocity.set(0, 0, 0);
-        this.stateTimer = 0;
-      }
-    } else if (this.state === 'flee') {
-      const playerPos = world.player.mesh.position;
-      const direction = this.mesh.position.clone().sub(playerPos);
-      direction.y = 0;
-      direction.normalize();
-      this.velocity.copy(direction.multiplyScalar(this.speed * 1.3));
+
+    const dx = Math.sin(this.heading) * this.speed * delta;
+    const dz = Math.cos(this.heading) * this.speed * delta;
+    const targetX = this.position.x + dx;
+    const targetZ = this.position.z + dz;
+    if (!world.isBlocked(targetX, targetZ, 2.2)) {
+      this.position.x = targetX;
+      this.position.z = targetZ;
     } else {
-      this.velocity.set(0, 0, 0);
+      this.heading += Math.PI * 0.5;
     }
 
-    super.update(delta);
+    this.position.y = world.sampleHeight(this.position.x, this.position.z);
+
+    if (this.node) {
+      this.node.position.x = this.position.x;
+      this.node.position.y = this.position.y;
+      this.node.position.z = this.position.z;
+      this.node.rotation.y = this.heading;
+    }
+
+    if (this.faction === 'police') {
+      const distance = Math.hypot(world.player.position.x - this.position.x, world.player.position.z - this.position.z);
+      if (distance < 18 && world.player.wanted > 0) {
+        world.raiseWanted(4);
+        world.notify('Police spotted you!');
+      }
+    }
   }
 
-  _chooseNewState() {
-    const state = randomChoice(['idle', 'walking', 'chatting']);
-    this.state = state;
-    this.stateTimer = randomRange(2, 6);
-    if (state === 'walking') {
-      const offset = new THREE.Vector3(randomRange(-25, 25), 0, randomRange(-25, 25));
-      this.targetPosition = this.mesh.position.clone().add(offset);
+  takeDamage(amount) {
+    this.health = clamp(this.health - amount, 0, 80);
+    if (this.health <= 0) {
+      this.dead = true;
+      if (this.node) {
+        this.node.hidden = true;
+      }
     }
-  }
-
-  escalate(world) {
-    if (this.faction !== 'police') {
-      this.state = 'flee';
-      this.stateTimer = randomRange(4, 9);
-      return;
-    }
-    this.state = 'engage';
-    this.stateTimer = randomRange(5, 12);
-    world.spawnPoliceBackup(this);
   }
 }

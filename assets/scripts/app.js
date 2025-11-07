@@ -30,7 +30,7 @@ export class App {
       this.stop();
     }
     this.world = new GameWorld(this.canvasHost, this.ui, this.settings);
-    await this.world.init(Date.now());
+    await this.world.init();
     this.ui.hideLobby();
     this.ui.showHUD();
     this.running = true;
@@ -64,31 +64,14 @@ export class App {
           if (!this.world) {
             await this.start();
           }
-          this.world.missions?.rollMission();
+          this.world?.missions?.nextMission(this.world.player);
           break;
         case 'settings':
-          this.ui.toggleSettings(true);
-          break;
-        case 'close-settings':
-          this.ui.toggleSettings(false);
+          this._openSettingsModal();
           break;
         default:
           break;
       }
-    });
-
-    this.ui.settingsPanel.addEventListener('input', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement) && !(target instanceof HTMLSelectElement)) return;
-      const setting = target.dataset.setting;
-      if (!setting) return;
-      const value = target.type === 'range' ? parseFloat(target.value) : target.value;
-      this._applySetting(setting, value);
-    });
-
-    this.ui.bindResolution((resolution) => {
-      const [width, height] = resolution.split('x').map((value) => Number.parseInt(value, 10));
-      this._applyResolutionPreset(width, height);
     });
   }
 
@@ -108,13 +91,34 @@ export class App {
     }
   }
 
-  _applyResolutionPreset(width, height) {
-    this.canvasHost.style.setProperty('--target-width', `${width}px`);
-    this.canvasHost.style.setProperty('--target-height', `${height}px`);
-    if (!this.canvasHost.classList.contains('fixed-resolution')) {
-      this.canvasHost.classList.add('fixed-resolution');
-    }
-    this.ui.showToast(`Viewport set to ${width}×${height}`);
+  _openSettingsModal() {
+    const applyProfile = (profile, label) => {
+      Object.assign(this.settings, profile);
+      if (this.world) {
+        this.world.applySettings(this.settings);
+      }
+      this.ui.hideModal();
+      this.ui.showToast(`${label} profile applied`, 'info');
+    };
+
+    this.ui.showModal({
+      title: 'Display & Simulation Profiles',
+      description: 'Choose how the city is rendered and how busy it feels.',
+      options: [
+        {
+          label: 'Performance (Low Fidelity, Low Density)',
+          action: () => applyProfile({ fidelity: 0.8, density: 0.7 }, 'Performance'),
+        },
+        {
+          label: 'Balanced (Default)',
+          action: () => applyProfile({ fidelity: 1, density: 1 }, 'Balanced'),
+        },
+        {
+          label: 'Cinematic (High Fidelity, Dense Streets)',
+          action: () => applyProfile({ fidelity: 1.3, density: 1.3 }, 'Cinematic'),
+        },
+      ],
+    });
   }
 }
 

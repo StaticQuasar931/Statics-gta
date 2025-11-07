@@ -1,143 +1,196 @@
-import THREE from '../engine/three.js';
-import { Entity } from './entity.js';
-import { PLAYER_HEALTH, PLAYER_RUN_SPEED, PLAYER_WALK_SPEED, WEAPON_STATS } from './constants.js';
+import { clamp, vec3, normalizeVec3 } from '../engine/math.js';
 
-export class Player extends Entity {
-  constructor({ mesh, input }) {
-    super({ mesh, type: 'player', radius: 1.2, height: 2 });
-    this.input = input;
-    this.health = PLAYER_HEALTH;
-    this.maxHealth = PLAYER_HEALTH;
-    this.armor = 75;
-    this.maxArmor = 100;
+const WALK_SPEED = 18;
+const RUN_SPEED = 32;
+const TURN_SPEED = 2.8;
+const SHOOT_COOLDOWN = 0.28;
+
+export class Player {
+  constructor(node) {
+    this.node = node;
+    this.position = vec3();
+    this.heading = 0;
+    this.health = 120;
+    this.armor = 40;
     this.stamina = 100;
-    this.maxStamina = 100;
-    this.money = 500;
-    this.inventory = new Map();
-    this.weapons = ['pistol'];
+    this.money = 2500;
+    this.wanted = 0;
+    this.vehicle = null;
     this.activeWeapon = 'pistol';
     this.weaponCooldown = 0;
-    this.vehicle = null;
-    this.isSprinting = false;
-    this.cameraOffset = new THREE.Vector3(0, 22, 38);
-    this.direction = new THREE.Vector3(0, 0, -1);
-    this.aimTarget = new THREE.Vector3();
-    this.stats = { kills: 0, arrests: 0, missions: 0 };
+    this.onFoot = true;
+    this.interactHint = '';
   }
 
-  setCameraOffset(offset) {
-    this.cameraOffset.copy(offset);
-  }
-
-  update(delta) {
-    super.update(delta);
-    this._recoverStamina(delta);
-    if (this.weaponCooldown > 0) {
-      this.weaponCooldown = Math.max(0, this.weaponCooldown - delta);
+  setPosition(x, y, z) {
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    if (this.node) {
+      this.node.position.x = x;
+      this.node.position.y = y;
+      this.node.position.z = z;
+      this.node.rotation.y = this.heading;
     }
   }
 
-  _recoverStamina(delta) {
-    const regenRate = this.isSprinting ? 2 : 15;
-    if (!this.input.isDown('shift')) {
-      this.stamina = Math.min(this.maxStamina, this.stamina + regenRate * delta);
-    }
-  }
-
-  handleMovement(delta, groundNormal = new THREE.Vector3(0, 1, 0)) {
-    const forward = new THREE.Vector3();
-    const right = new THREE.Vector3();
-    const up = groundNormal.clone();
-
-    forward.set(0, 0, -1).applyQuaternion(this.mesh.quaternion);
-    forward.y = 0;
-    forward.normalize();
-
-    right.crossVectors(forward, up).normalize();
-
-    let moveX = 0;
-    let moveZ = 0;
-
-    if (this.input.isDown('w')) moveZ -= 1;
-    if (this.input.isDown('s')) moveZ += 1;
-    if (this.input.isDown('a')) moveX -= 1;
-    if (this.input.isDown('d')) moveX += 1;
-
-    const movement = forward.clone().multiplyScalar(moveZ).add(right.clone().multiplyScalar(moveX));
-    if (movement.lengthSq() > 0) {
-      movement.normalize();
-      this.direction.copy(movement);
-    }
-
-    this.isSprinting = this.input.isDown('shift') && this.stamina > 10;
-    const speed = this.isSprinting ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
-    if (this.isSprinting) {
-      this.stamina = Math.max(0, this.stamina - 22 * delta);
-    }
-
-    this.velocity.set(0, 0, 0);
-    if (movement.lengthSq() > 0) {
-      this.velocity.copy(movement).multiplyScalar(speed);
-      const lookTarget = this.mesh.position.clone().add(this.direction);
-      this.mesh.lookAt(lookTarget.x, this.mesh.position.y, lookTarget.z);
-    }
-  }
-
-  applyCamera(camera, { heightOffset = 22, distance = 38, smoothing = 0.12 } = {}) {
-    const desired = this.mesh.position
-      .clone()
-      .add(new THREE.Vector3(0, heightOffset, 0))
-      .add(this.direction.clone().multiplyScalar(-distance));
-
-    camera.position.lerp(desired, smoothing);
-    const target = this.mesh.position.clone().add(new THREE.Vector3(0, 6, 0));
-    camera.lookAt(target);
-  }
-
-  equipWeapon(id) {
-    if (!this.weapons.includes(id)) {
-      this.weapons.push(id);
-    }
-    this.activeWeapon = id;
-  }
-
-  canFire() {
-    if (!this.activeWeapon) return false;
-    const stats = WEAPON_STATS[this.activeWeapon];
-    if (!stats) return false;
-    return this.weaponCooldown <= 0;
-  }
-
-  onWeaponFired() {
-    const stats = WEAPON_STATS[this.activeWeapon];
-    if (!stats) return;
-    this.weaponCooldown = stats.fireRate;
-  }
-
-  enterVehicle(vehicle) {
+  attachVehicle(vehicle) {
     this.vehicle = vehicle;
+    this.onFoot = false;
     vehicle.driver = this;
   }
 
-  exitVehicle() {
-    if (!this.vehicle) return;
-    const vehicle = this.vehicle;
-    this.vehicle.driver = null;
-    this.vehicle = null;
-    const exitOffset = this.direction.clone().multiplyScalar(-4).add(new THREE.Vector3(0, 0, 4));
-    const exitPosition = vehicle.mesh.position.clone().add(exitOffset.setY(0));
-    this.mesh.position.copy(exitPosition).setY(1.2);
-  }
-
-  addMoney(amount) {
-    this.money = Math.max(0, this.money + amount);
-  }
-
-  spendMoney(amount) {
-    if (this.money >= amount) {
-      this.money -= amount;
-      return true;
+  detachVehicle() {
+    if (this.vehicle) {
+      this.vehicle.driver = null;
+      this.vehicle = null;
     }
-    return false;
+    this.onFoot = true;
+  }
+
+  update(delta, input, world) {
+    if (this.weaponCooldown > 0) {
+      this.weaponCooldown -= delta;
+    }
+
+    if (this.onFoot) {
+      this._updateOnFoot(delta, input, world);
+    } else if (this.vehicle) {
+      this._updateDriving(delta, input, world);
+    }
+
+    if (input.wasPressed('e')) {
+      this._handleInteract(world);
+    }
+
+    if ((input.wasPressed('pointer') || input.wasPressed(' ')) && this.weaponCooldown <= 0) {
+      this._fire(world);
+    }
+
+    if (this.node) {
+      this.node.position.x = this.position.x;
+      this.node.position.y = this.position.y;
+      this.node.position.z = this.position.z;
+      this.node.rotation.y = this.heading;
+    }
+  }
+
+  _updateOnFoot(delta, input, world) {
+    const forward = (input.isDown('w') ? 1 : 0) - (input.isDown('s') ? 1 : 0);
+    const turn = (input.isDown('d') ? 1 : 0) - (input.isDown('a') ? 1 : 0);
+    const running = input.isDown('shift');
+
+    this.heading += turn * TURN_SPEED * delta;
+
+    const speed = running ? RUN_SPEED : WALK_SPEED;
+    const velocity = forward * speed;
+    const dx = Math.sin(this.heading) * velocity * delta;
+    const dz = Math.cos(this.heading) * velocity * delta;
+
+    if (running && forward !== 0) {
+      this.stamina = Math.max(0, this.stamina - delta * 16);
+    } else {
+      this.stamina = Math.min(100, this.stamina + delta * 12);
+    }
+
+    const target = {
+      x: this.position.x + dx,
+      y: this.position.y,
+      z: this.position.z + dz,
+    };
+
+    const blocked = world.isBlocked(target.x, target.z, 3.2);
+    if (!blocked) {
+      this.position.x = target.x;
+      this.position.z = target.z;
+    }
+
+    this.position.y = world.sampleHeight(this.position.x, this.position.z);
+    this.onFoot = true;
+
+    // search for nearby vehicles or loot
+    this.interactHint = '';
+    const nearbyVehicle = world.findNearestVehicle(this.position, 6, (vehicle) => !vehicle.driver);
+    if (nearbyVehicle) {
+      this.interactHint = 'Press E to enter vehicle';
+    } else {
+      const loot = world.findNearestLoot(this.position, 4);
+      if (loot) {
+        this.interactHint = 'Press E to collect loot';
+      } else {
+        const shop = world.findNearbyShop(this.position, 6);
+        if (shop) {
+          this.interactHint = `Press E to enter ${shop.label}`;
+        }
+      }
+    }
+  }
+
+  _updateDriving(delta, input, world) {
+    if (!this.vehicle) {
+      this.onFoot = true;
+      return;
+    }
+
+    const throttle = (input.isDown('w') ? 1 : 0) - (input.isDown('s') ? 1 : 0);
+    const steer = (input.isDown('d') ? 1 : 0) - (input.isDown('a') ? 1 : 0);
+    const brake = input.isDown('space') ? 1 : 0;
+    this.vehicle.control(throttle, steer, brake, delta, world);
+    const seat = this.vehicle.getSeatPosition();
+    this.position.x = seat.x;
+    this.position.y = seat.y;
+    this.position.z = seat.z;
+    this.heading = this.vehicle.heading;
+    this.interactHint = 'Press E to exit vehicle';
+  }
+
+  _handleInteract(world) {
+    if (this.onFoot) {
+      const loot = world.findNearestLoot(this.position, 3.5);
+      if (loot) {
+        world.collectLoot(loot, this);
+        return;
+      }
+      const shop = world.findNearbyShop(this.position, 5);
+      if (shop) {
+        world.openShop(shop, this);
+        return;
+      }
+      const vehicle = world.findNearestVehicle(this.position, 5, (candidate) => !candidate.driver);
+      if (vehicle) {
+        this.attachVehicle(vehicle);
+        world.notify(`Entered ${vehicle.name}`);
+      }
+    } else {
+      this.detachVehicle();
+      world.notify('Back on foot');
+    }
+  }
+
+  _fire(world) {
+    if (!this.onFoot && !this.vehicle) return;
+    this.weaponCooldown = SHOOT_COOLDOWN;
+    const muzzle = {
+      x: this.position.x + Math.sin(this.heading) * 2.2,
+      y: this.position.y + 4.2,
+      z: this.position.z + Math.cos(this.heading) * 2.2,
+    };
+    const direction = normalizeVec3({ x: Math.sin(this.heading), y: 0, z: Math.cos(this.heading) });
+    world.spawnBullet({ origin: muzzle, direction, owner: this, damage: 28 });
+    world.raiseWanted(8);
+  }
+
+  applyDamage(amount) {
+    let remaining = amount;
+    if (this.armor > 0) {
+      const absorbed = Math.min(this.armor, remaining * 0.6);
+      this.armor -= absorbed;
+      remaining -= absorbed;
+    }
+    this.health = clamp(this.health - remaining, 0, 150);
+  }
+
+  isAlive() {
+    return this.health > 0;
   }
 }

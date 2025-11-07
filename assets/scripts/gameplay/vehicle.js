@@ -1,118 +1,123 @@
-import THREE from '../engine/three.js';
-import { Entity } from './entity.js';
-import { VEHICLE_SPEEDS, VEHICLE_ACCELERATION, VEHICLE_TURN_RATE } from './constants.js';
+import { clamp } from '../engine/math.js';
 
-export class Vehicle extends Entity {
-  constructor({ mesh, id, ai = null }) {
-    super({ mesh, type: 'vehicle', radius: 3.6, height: 2.2 });
-    this.id = id;
-    this.maxSpeed = VEHICLE_SPEEDS[id] ?? 60;
-    this.acceleration = VEHICLE_ACCELERATION;
-    this.turnRate = VEHICLE_TURN_RATE;
-    this.baseMaxSpeed = this.maxSpeed;
-    this.baseAcceleration = this.acceleration;
-    this.speed = 0;
+const BASE_ACCELERATION = 32;
+const BASE_TURN = 1.8;
+
+export class Vehicle {
+  constructor(node, { name = 'Vehicle', maxSpeed = 90, grip = 1, faction = 'civilian' } = {}) {
+    this.node = node;
+    this.name = name;
+    this.position = { x: 0, y: 2, z: 0 };
     this.heading = 0;
+    this.speed = 0;
+    this.maxSpeed = maxSpeed;
+    this.grip = grip;
+    this.faction = faction;
+    this.health = 150;
     this.driver = null;
-    this.ai = ai;
-    this.fuel = 100;
-    this.maxFuel = 100;
-    this.integrity = 100;
-    this.hitPoints = 120;
-    this.upgradeLevel = 0;
-    this.throttleInput = 0;
-    this.steerInput = 0;
-    this.brakeInput = 0;
-    this.groundNormal = new THREE.Vector3(0, 1, 0);
-    this.target = new THREE.Vector3();
+    this.ai = null;
+    this.turnVelocity = 0;
   }
 
-  update(delta) {
-    if (!this.isAlive) return;
-
-    if (this.driver) {
-      this._applyControls(delta);
-    } else if (this.ai) {
-      this.ai.update(this, delta);
-    } else {
-      this._applyFriction(delta);
+  setPosition(x, y, z) {
+    this.position.x = x;
+    this.position.y = y;
+    this.position.z = z;
+    if (this.node) {
+      this.node.position.x = x;
+      this.node.position.y = y;
+      this.node.position.z = z;
     }
-
-    super.update(delta);
-    this._updateOrientation();
-    this._consumeFuel(delta);
   }
 
-  _applyControls(delta) {
-    const accel = this.acceleration * this.throttleInput;
+  setHeading(angle) {
+    this.heading = angle;
+    if (this.node) {
+      this.node.rotation.y = this.heading;
+    }
+  }
+
+  control(throttle, steer, brake, delta, world) {
+    const accel = BASE_ACCELERATION * throttle;
+    if (brake > 0) {
+      this.speed = clamp(this.speed - brake * 60 * delta, -this.maxSpeed * 0.35, this.maxSpeed);
+    }
     this.speed += accel * delta;
-    if (this.brakeInput > 0) {
-      this.speed = Math.max(0, this.speed - (this.acceleration * 1.8) * this.brakeInput * delta);
+    const drag = 1 - Math.min(Math.abs(this.speed) / this.maxSpeed, 1) * 0.08;
+    this.speed *= drag;
+    this.speed = clamp(this.speed, -this.maxSpeed * 0.35, this.maxSpeed);
+
+    if (Math.abs(this.speed) > 2) {
+      this.heading += steer * BASE_TURN * delta * this.grip * Math.sign(this.speed);
     }
-    this.speed = THREE.MathUtils.clamp(this.speed, -this.maxSpeed * 0.35, this.maxSpeed);
-    const turnAmount = this.steerInput * this.turnRate * delta * (this.speed / this.maxSpeed);
-    this.heading += turnAmount;
-    this.mesh.rotation.y = -this.heading;
 
-    const forward = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
-    this.velocity.copy(forward.multiplyScalar(this.speed));
-  }
-
-  _applyFriction(delta) {
-    if (Math.abs(this.speed) < 0.1) {
-      this.speed = 0;
-      this.velocity.set(0, 0, 0);
-      return;
+    const dx = Math.sin(this.heading) * this.speed * delta;
+    const dz = Math.cos(this.heading) * this.speed * delta;
+    const targetX = this.position.x + dx;
+    const targetZ = this.position.z + dz;
+    if (!world.isBlocked(targetX, targetZ, 4.4)) {
+      this.position.x = targetX;
+      this.position.z = targetZ;
+    } else {
+      this.speed *= -0.4;
     }
-    const friction = 12 * delta;
-    this.speed -= Math.sign(this.speed) * friction;
-    const forward = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
-    this.velocity.copy(forward.multiplyScalar(this.speed));
-  }
 
-  _updateOrientation() {
-    if (this.velocity.lengthSq() > 0.0001) {
-      const headingVec = this.velocity.clone().normalize();
-      this.heading = Math.atan2(headingVec.x, headingVec.z);
-      this.mesh.rotation.y = -this.heading;
+    this.position.y = world.sampleHeight(this.position.x, this.position.z) + 2;
+
+    if (this.node) {
+      this.node.position.x = this.position.x;
+      this.node.position.y = this.position.y;
+      this.node.position.z = this.position.z;
+      this.node.rotation.y = this.heading;
     }
   }
 
-  _consumeFuel(delta) {
-    if (this.speed === 0) return;
-    const consumption = Math.abs(this.speed) / this.maxSpeed * delta * 0.9;
-    this.fuel = Math.max(0, this.fuel - consumption);
-    if (this.fuel <= 0) {
-      this.speed = 0;
-      this.throttleInput = 0;
+  updateAI(delta, world) {
+    if (!this.ai) return;
+    if (this.ai.type === 'traffic') {
+      this._trafficUpdate(delta, world);
+    } else if (this.ai.type === 'police') {
+      this._policeUpdate(delta, world);
     }
   }
 
-  applyInputs({ throttle = 0, steer = 0, brake = 0 }) {
-    this.throttleInput = THREE.MathUtils.clamp(throttle, -1, 1);
-    this.steerInput = THREE.MathUtils.clamp(steer, -1, 1);
-    this.brakeInput = THREE.MathUtils.clamp(brake, 0, 1);
+  _trafficUpdate(delta, world) {
+    const target = this.ai.target;
+    if (!target || Math.hypot(target.x - this.position.x, target.z - this.position.z) < 8) {
+      this.ai.target = world.pickTrafficDestination();
+    }
+    const direction = Math.atan2(target.x - this.position.x, target.z - this.position.z);
+    const steerError = ((direction - this.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    const steer = clamp(steerError / Math.PI, -1, 1);
+    this.control(0.9, steer, 0, delta, world);
   }
 
-  repair(amount = 25) {
-    this.integrity = Math.min(100, this.integrity + amount);
+  _policeUpdate(delta, world) {
+    const { target } = this.ai;
+    if (!target) return;
+    const direction = Math.atan2(target.position.x - this.position.x, target.position.z - this.position.z);
+    const steerError = ((direction - this.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    const steer = clamp(steerError / Math.PI, -1, 1);
+    const distance = Math.hypot(target.position.x - this.position.x, target.position.z - this.position.z);
+    const brake = distance < 15 ? 0.6 : 0;
+    this.control(1, steer, brake, delta, world);
+    if (distance < 6 && target.onFoot) {
+      target.applyDamage(12 * delta);
+      world.raiseWanted(4);
+      world.notify('Police contact!');
+    }
   }
 
-  refuel(amount = 20) {
-    this.fuel = Math.min(this.maxFuel, this.fuel + amount);
+  getSeatPosition() {
+    return {
+      x: this.position.x + Math.sin(this.heading) * 1.2,
+      y: this.position.y + 1.6,
+      z: this.position.z + Math.cos(this.heading) * 1.2,
+    };
   }
 
   takeDamage(amount) {
-    super.takeDamage(amount);
-    this.integrity = Math.max(0, this.integrity - amount * 0.8);
-  }
-
-  applyUpgrade(level) {
-    this.upgradeLevel = level;
-    this.maxSpeed = this.baseMaxSpeed * (1 + level * 0.12);
-    this.acceleration = this.baseAcceleration * (1 + level * 0.08);
-    this.turnRate = VEHICLE_TURN_RATE * (1 + level * 0.04);
-    this.maxFuel = 100 + level * 5;
-    this.integrity = Math.min(180, this.integrity + level * 6);
+    this.health = Math.max(0, this.health - amount);
+    return this.health <= 0;
   }
 }

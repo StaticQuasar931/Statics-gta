@@ -1,41 +1,44 @@
-import { randomChoice } from '../util/random.js';
-
-const MISSION_POOL = [
-  { id: 'heist', label: 'Bank Heist', payout: [65000, 95000], wanted: 40 },
-  { id: 'race', label: 'Downtown Sprint', payout: [12000, 22000], wanted: 10 },
-  { id: 'delivery', label: 'Courier Drop', payout: [8000, 15000], wanted: 5 },
-  { id: 'rescue', label: 'Rescue Civilians', payout: [18000, 26000], wanted: -15 },
-  { id: 'escort', label: 'Convoy Escort', payout: [20000, 38000], wanted: 15 },
-  { id: 'bounty', label: 'Bounty Hunt', payout: [14000, 32000], wanted: 25 },
+const MISSIONS = [
+  {
+    id: 'courier',
+    label: 'Neon Courier',
+    description: 'Deliver a payload to the harbor district without losing your vehicle.',
+    reward: 2200,
+  },
+  {
+    id: 'heist',
+    label: 'Micro Vault Heist',
+    description: 'Infiltrate the Skyline Bank branch and escape with any loot you find.',
+    reward: 5600,
+  },
+  {
+    id: 'race',
+    label: 'Gridlock Grand Prix',
+    description: 'Win a night sprint through Downtown traffic checkpoints.',
+    reward: 3200,
+  },
 ];
 
 export class MissionSystem {
-  constructor(economy, ui) {
-    this.economy = economy;
+  constructor(ui) {
     this.ui = ui;
     this.activeMission = null;
-    this.completed = [];
+    this.progress = 0;
   }
 
-  rollMission() {
-    const mission = randomChoice(MISSION_POOL);
-    this.activeMission = { ...mission, progress: 0, steps: [] };
-    this.ui.updateMission(this.activeMission);
-    return this.activeMission;
+  nextMission(player) {
+    const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+    this.activeMission = mission;
+    this.progress = 0;
+    this.ui.showToast(`Mission started: ${mission.label}`, 'info');
+    this.ui.showMission(mission.label, mission.description);
   }
 
-  completeMission(success = true) {
+  completeMission(player) {
     if (!this.activeMission) return;
-    if (success) {
-      const [min, max] = this.activeMission.payout;
-      const reward = Math.floor(Math.random() * (max - min) + min);
-      this.economy.earn(this.activeMission.label, reward);
-      this.completed.push({ ...this.activeMission, reward, success: true });
-    } else {
-      this.completed.push({ ...this.activeMission, success: false });
-      this.ui.showToast(`${this.activeMission.label} failed`, 'error');
-    }
+    player.money += this.activeMission.reward;
+    this.ui.showToast(`Mission complete! Earned $${this.activeMission.reward.toLocaleString()}`, 'success');
+    this.ui.showMission('Free Roam', 'Explore, earn cash, or trigger another mission.');
     this.activeMission = null;
-    this.ui.updateMission(null);
   }
 }

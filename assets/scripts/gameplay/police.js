@@ -1,54 +1,36 @@
-import { POLICE_RESPONSES, WANTED_THRESHOLDS } from './constants.js';
+const LEVELS = [0, 15, 35, 70, 110, 160];
 
 export class PoliceSystem {
-  constructor(world, ui) {
+  constructor(world) {
     this.world = world;
-    this.ui = ui;
-    this.wantedScore = 0;
+    this.wanted = 0;
     this.decayTimer = 0;
-    this.activeLevel = 0;
-    this.dispatchCooldown = 0;
+    this.alert = false;
   }
 
   addWanted(amount) {
-    this.wantedScore = Math.min(999, this.wantedScore + amount);
-    this.decayTimer = 0;
-    this._updateWantedLevel();
-  }
-
-  reduceWanted(amount) {
-    this.wantedScore = Math.max(0, this.wantedScore - amount);
-    this._updateWantedLevel();
+    this.wanted = Math.min(160, this.wanted + amount);
+    this.decayTimer = 12;
   }
 
   update(delta) {
-    this.decayTimer += delta;
-    if (this.decayTimer > 20 && this.wantedScore > 0) {
-      this.wantedScore = Math.max(0, this.wantedScore - delta * 6);
-      this._updateWantedLevel();
+    if (this.wanted > 0) {
+      this.decayTimer -= delta;
+      if (this.decayTimer <= 0) {
+        this.wanted = Math.max(0, this.wanted - delta * 6);
+      }
     }
 
-    if (this.dispatchCooldown > 0) {
-      this.dispatchCooldown -= delta;
-    }
-
-    const currentResponse = POLICE_RESPONSES[this.activeLevel - 1];
-    if (currentResponse && this.dispatchCooldown <= 0) {
-      this.world.dispatchPoliceUnits(currentResponse);
-      this.dispatchCooldown = 25;
+    const level = this.getLevel();
+    if (level >= 2 && this.world.countActivePolice() < level) {
+      this.world.spawnPolicePatrol(level);
     }
   }
 
-  _updateWantedLevel() {
-    let level = 0;
-    for (let i = 0; i < WANTED_THRESHOLDS.length; i += 1) {
-      if (this.wantedScore >= WANTED_THRESHOLDS[i]) {
-        level = i;
-      }
+  getLevel() {
+    for (let i = LEVELS.length - 1; i >= 0; i -= 1) {
+      if (this.wanted >= LEVELS[i]) return i;
     }
-    if (level !== this.activeLevel) {
-      this.activeLevel = level;
-      this.ui.updateWantedLevel(level);
-    }
+    return 0;
   }
 }
