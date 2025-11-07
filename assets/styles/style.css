@@ -304,6 +304,14 @@ body {
   color: var(--warning);
 }
 
+.hud-wanted .awl {
+  display: block;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  color: var(--accent);
+  letter-spacing: 0.08rem;
+}
+
 .hud-money {
   background: rgba(8, 12, 22, 0.72);
   padding: 12px 18px;

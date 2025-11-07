@@ -18,6 +18,8 @@ export class Vehicle {
     this.locked = false;
     this.ai = null;
     this.owner = 'civ';
+    this.hp = 180;
+    this.fireCooldown = 0;
   }
 
   update(delta, world) {
@@ -36,6 +38,10 @@ export class Vehicle {
 
     if (Math.abs(this.speed) < 2) {
       this.speed = 0;
+    }
+
+    if (this.fireCooldown > 0) {
+      this.fireCooldown = Math.max(0, this.fireCooldown - delta);
     }
 
     if (this.driver === world.player) {
@@ -88,9 +94,9 @@ export class Vehicle {
       const distance = Math.hypot(ped.x - this.x, ped.y - this.y);
       if (distance < this.radius + ped.radius) {
         ped.takeDamage(Math.abs(this.speed) * 0.6 + 20, world);
-        world.reportCrime('Vehicular impact', 8, 'collision');
+        world.reportCrime('Vehicular impact', 28, 'collision');
         if (ped.dead) {
-          world.reportCrime('Vehicular manslaughter', 16, 'homicide');
+          world.reportCrime('Vehicular manslaughter', 60, 'homicide');
           const payout = 120 + Math.floor(Math.random() * 180);
           world.spawnLoot(ped.x, ped.y, payout);
         }
@@ -116,7 +122,20 @@ export class Vehicle {
     const desired = distance > 140 ? this.maxSpeed : this.maxSpeed * 0.4;
     this.speed += (desired - this.speed) * 0.6 * delta;
     if (distance < 80 && world.player.vehicle === this) {
-      world.reportCrime('Police collision', 6, 'collision');
+      world.reportCrime('Police collision', 26, 'collision');
+    }
+  }
+
+  applyDamage(amount, world) {
+    this.hp -= amount;
+    if (this.hp > 0) return;
+    if (this.faction === 'police') {
+      world.reportCrime('Metro unit destroyed', 140, 'homicide');
+    }
+    world.spawnLoot(this.x, this.y, 180 + Math.floor(Math.random() * 160));
+    world.removeVehicle(this);
+    if (world.police?.units) {
+      world.police.units.delete(this);
     }
   }
 }

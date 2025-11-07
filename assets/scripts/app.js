@@ -15,6 +15,7 @@ export class App {
     this.world = null;
     this.loopHandle = 0;
     this.running = false;
+    this._lastFrameTime = 0;
     this.settings = {
       fidelity: 1,
       density: 1,
@@ -36,6 +37,7 @@ export class App {
     this.ui.showHUD();
     this.ui.togglePause(false);
     this.running = true;
+    this._lastFrameTime = performance.now();
     this._loop();
     this.ui.showToast('Welcome back to Neon Grandline, StaticQuasar931!', 'success');
   }
@@ -47,13 +49,16 @@ export class App {
     this.canvasHost.innerHTML = '';
     this.world = null;
     this.ui.togglePause(false);
+    this._lastFrameTime = 0;
   }
 
   _loop() {
     if (!this.running || !this.world) return;
-    this.world.renderer.render((delta) => {
-      this.world.update(delta);
-    });
+    const now = performance.now();
+    const delta = this._lastFrameTime ? Math.min((now - this._lastFrameTime) / 1000, 0.12) : 1 / 60;
+    this._lastFrameTime = now;
+    this.world.update(delta);
+    this.world.input.resetFrame();
     this.loopHandle = requestAnimationFrame(() => this._loop());
   }
 

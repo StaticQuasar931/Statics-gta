@@ -75,6 +75,7 @@ export class UIManager {
         <div class="hud-wanted" data-level="0">
           <span class="label">Wanted</span>
           <span class="stars">☆ ☆ ☆ ☆ ☆</span>
+          <span class="awl">0 WP</span>
         </div>
         <div class="hud-money">
           <span class="value">$0</span>
@@ -217,7 +218,7 @@ export class UIManager {
     }
   }
 
-  updateHUD({ time, mission, wantedLevel, money, health, armor, stamina, vehicle, hint }) {
+  updateHUD({ time, mission, wantedLevel, awl, money, health, armor, stamina, vehicle, hint }) {
     const timeElem = this.hud.querySelector('.hud-clock .time');
     if (timeElem) timeElem.textContent = time;
     const missionElem = this.hud.querySelector('.hud-clock .mission');
@@ -230,6 +231,14 @@ export class UIManager {
     const wanted = this.hud.querySelector('.hud-wanted');
     if (wanted) {
       wanted.dataset.level = String(wantedLevel);
+      if (awl !== undefined) {
+        wanted.dataset.awl = String(Math.round(awl));
+        wanted.setAttribute('title', `Active Wanted Level: ${Math.round(awl)} WP`);
+        const awlElem = wanted.querySelector('.awl');
+        if (awlElem) {
+          awlElem.textContent = `${Math.round(awl)} WP`;
+        }
+      }
       const stars = Array.from({ length: 5 })
         .map((_, idx) => (idx < wantedLevel ? '★' : '☆'))
         .join(' ');

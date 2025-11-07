@@ -20,7 +20,7 @@ const MISSION_POOL = [
     duration: 150,
     reward: 900,
     start(world) {
-      world.reportCrime('Mission: carjacking underway', 18, 'theft');
+      world.reportCrime('Mission: carjacking underway', 32, 'theft');
     },
     update(delta, world) {
       if (world.player.vehicle && world.police.level >= 2) {

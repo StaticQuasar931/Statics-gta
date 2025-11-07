@@ -1,5 +1,7 @@
 import { Vehicle } from './vehicle.js';
 
+const STAR_THRESHOLDS = [0, 50, 120, 300, 600, 1000];
+
 export class PoliceSystem {
   constructor(world) {
     this.world = world;
@@ -11,15 +13,25 @@ export class PoliceSystem {
 
   setWanted(value) {
     this.wanted = value;
-    const newLevel = Math.min(5, Math.floor(value / 25));
+    let newLevel = 0;
+    for (let i = STAR_THRESHOLDS.length - 1; i >= 0; i -= 1) {
+      if (value >= STAR_THRESHOLDS[i]) {
+        newLevel = i;
+        break;
+      }
+    }
     if (newLevel !== this.level) {
+      const previous = this.level;
       this.level = newLevel;
       if (this.level === 0) {
         this._recallUnits();
         this.world.ui.showToast('Metro patrol stood down.', 'info');
       } else {
-        this.world.ui.showToast(`Wanted level ${this.level}. Metro patrol inbound!`, 'warning');
+        const flavour = this.level >= 4 ? 'Special Tactical teams' : 'Metro patrol';
+        const escalation = this.level > previous ? 'inbound' : 'still tracking';
+        this.world.ui.showToast(`Wanted level ${this.level}. ${flavour} ${escalation}!`, 'warning');
       }
+      this.spawnTimer = 0.25;
     }
   }
 
@@ -33,6 +45,29 @@ export class PoliceSystem {
     for (const unit of Array.from(this.units)) {
       if (!this.world.vehicles.includes(unit)) {
         this.units.delete(unit);
+        continue;
+      }
+
+      if (this.level === 0 || this.world.player.down) continue;
+
+      if (unit.fireCooldown <= 0) {
+        const dx = this.world.player.x - unit.x;
+        const dy = this.world.player.y - unit.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 420) {
+          const direction = Math.atan2(dy, dx);
+          const muzzleX = unit.x + Math.cos(direction) * 32;
+          const muzzleY = unit.y + Math.sin(direction) * 32;
+          this.world.spawnBullet({
+            x: muzzleX,
+            y: muzzleY,
+            direction,
+            speed: 520,
+            owner: unit,
+            damage: 36 + this.level * 4,
+          });
+          unit.fireCooldown = Math.max(1.6, 2.6 - this.level * 0.35);
+        }
       }
     }
   }

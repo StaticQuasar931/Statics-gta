@@ -35,12 +35,22 @@ const ASSET_MANIFEST = {
 };
 
 const CRIME_CAP = {
-  gunfire: 35,
-  homicide: 65,
-  theft: 55,
-  collision: 45,
-  robbery: 70,
+  gunfire: 240,
+  homicide: 680,
+  theft: 360,
+  collision: 320,
+  robbery: 420,
 };
+
+const CRIME_DECAY = {
+  gunfire: 28,
+  homicide: 18,
+  theft: 20,
+  collision: 22,
+  robbery: 16,
+};
+
+const MAX_WANTED_POINTS = 1500;
 
 export class GameWorld {
   constructor(container, ui, settings = {}) {
@@ -75,6 +85,7 @@ export class GameWorld {
     this.paused = false;
 
     this._wantedCleared = true;
+    this._respawnTimer = -1;
 
     this.economy = new EconomySystem(ui);
     this.missions = new MissionSystem(ui);
@@ -127,6 +138,7 @@ export class GameWorld {
         time: this._formatTime(this.dayTime),
         mission: this.missions.activeMission?.label ?? 'Paused',
         wantedLevel: this.police.level,
+        awl: this.wanted,
         money: this.player?.money ?? 0,
         health: this.player?.health ?? 0,
         armor: this.player?.armor ?? 0,
@@ -134,6 +146,7 @@ export class GameWorld {
         vehicle: this.player?.vehicle ?? null,
         hint: 'Paused – press ESC to resume',
       });
+      this.input.resetFrame();
       return;
     }
 
@@ -156,6 +169,7 @@ export class GameWorld {
     this._updateBullets(delta);
     this._updateLoot(delta);
     this.police.update(delta);
+    this._updatePlayerDown(delta);
 
     this._decayWanted(delta);
     this._maintainPopulation();
@@ -170,6 +184,7 @@ export class GameWorld {
       time: this._formatTime(this.dayTime),
       mission: this.missions.activeMission?.label ?? 'Free Roam',
       wantedLevel: this.police.level,
+      awl: this.wanted,
       money: this.player.money,
       health: this.player.health,
       armor: this.player.armor,
@@ -179,8 +194,8 @@ export class GameWorld {
     });
   }
 
-  spawnBullet({ x, y, direction, speed, owner }) {
-    this.bullets.push({ x, y, direction, speed, owner, ttl: 1.2 });
+  spawnBullet({ x, y, direction, speed, owner, damage = 40 }) {
+    this.bullets.push({ x, y, direction, speed, owner, damage, ttl: 1.2 });
   }
 
   spawnLoot(x, y, amount) {
@@ -215,10 +230,9 @@ export class GameWorld {
 
   reportCrime(type, value, bucket) {
     const key = bucket ?? 'gunfire';
-    const cap = CRIME_CAP[key] ?? 40;
+    const cap = CRIME_CAP[key] ?? CRIME_CAP.gunfire;
     this.crimeBuckets[key] = Math.min(cap, this.crimeBuckets[key] + value);
-    const aggregate = Object.values(this.crimeBuckets).reduce((sum, amount) => sum + amount, 0);
-    this.wanted = Math.min(140, aggregate);
+    this.wanted = Math.min(MAX_WANTED_POINTS, this._recalculateWanted());
     this.police.setWanted(this.wanted);
     this.ui.logCrime({ type, severity: this._severityForValue(value), wanted: this.wanted });
     this._wantedCleared = false;
@@ -228,6 +242,9 @@ export class GameWorld {
     for (const key of Object.keys(this.crimeBuckets)) {
       this.crimeBuckets[key] = 0;
     }
+    this.wanted = 0;
+    this.police.setWanted(this.wanted);
+    this._wantedCleared = true;
   }
 
   findNearbyVehicle(x, y, radius, predicate = () => true) {
@@ -357,15 +374,36 @@ export class GameWorld {
 
     this.bullets = this.bullets.filter((bullet) => {
       if (bullet.ttl <= 0) return false;
-      for (const ped of this.pedestrians) {
-        if (ped.dead) continue;
-        const distance = Math.hypot(ped.x - bullet.x, ped.y - bullet.y);
-        if (distance < 12) {
-          ped.takeDamage(60, this);
-          this.reportCrime('Civilian hit', 12, 'homicide');
+      if (bullet.owner !== this.player && !this.player.down) {
+        const target = this.player.vehicle ?? this.player;
+        const radius = (target?.radius ?? 18) + 6;
+        const distance = Math.hypot(target.x - bullet.x, target.y - bullet.y);
+        if (distance < radius) {
+          this.player.takeDamage(bullet.damage, this);
           return false;
         }
       }
+
+      for (const ped of this.pedestrians) {
+        if (ped.dead) continue;
+        const distance = Math.hypot(ped.x - bullet.x, ped.y - bullet.y);
+        if (distance < ped.radius + 4) {
+          ped.takeDamage(bullet.damage, this);
+          return false;
+        }
+      }
+
+      if (bullet.owner === this.player) {
+        for (const vehicle of this.vehicles) {
+          if (vehicle.faction !== 'police') continue;
+          const distance = Math.hypot(vehicle.x - bullet.x, vehicle.y - bullet.y);
+          if (distance < vehicle.radius + 8) {
+            vehicle.applyDamage?.(bullet.damage * 0.9, this);
+            return false;
+          }
+        }
+      }
+
       return bullet.x > -WORLD_SIZE && bullet.x < WORLD_SIZE && bullet.y > -WORLD_SIZE && bullet.y < WORLD_SIZE;
     });
   }
@@ -383,23 +421,94 @@ export class GameWorld {
   }
 
   _decayWanted(delta) {
-    if (this.wanted <= 0) return;
-    this.wanted = Math.max(0, this.wanted - delta * 6);
-    this.police.setWanted(this.wanted);
-    if (this.wanted === 0 && !this._wantedCleared) {
+    let changed = false;
+    for (const key of Object.keys(this.crimeBuckets)) {
+      const before = this.crimeBuckets[key];
+      if (before <= 0) continue;
+      const decay = (CRIME_DECAY[key] ?? 18) * delta;
+      const after = Math.max(0, before - decay);
+      if (after !== before) {
+        this.crimeBuckets[key] = after;
+        changed = true;
+      }
+    }
+
+    const previous = this.wanted;
+    const recalculated = this._recalculateWanted();
+    this.wanted = recalculated < 0.5 ? 0 : Math.min(MAX_WANTED_POINTS, recalculated);
+
+    if (changed || previous !== this.wanted) {
+      this.police.setWanted(this.wanted);
+    }
+
+    if (this.wanted === 0 && previous > 0 && !this._wantedCleared) {
       this.clearCrimeBuckets();
       this.ui.showToast('Wanted level lost. Lay low to stay safe.', 'success');
       this._wantedCleared = true;
     }
   }
 
+  _updatePlayerDown(delta) {
+    if (!this.player.down) {
+      this._respawnTimer = -1;
+      return;
+    }
+
+    if (this._respawnTimer < 0) {
+      this._respawnTimer = 2.5;
+    } else {
+      this._respawnTimer -= delta;
+    }
+
+    if (this._respawnTimer <= 0) {
+      this._respawnPlayer();
+    }
+  }
+
+  onPlayerDown() {
+    if (this.player.vehicle) {
+      this.player.vehicle.driver = null;
+      this.player.vehicle = null;
+    }
+    this.ui.showToast('You were incapacitated! Emergency crews en route.', 'error');
+    this._respawnTimer = 2.5;
+  }
+
+  _respawnPlayer() {
+    this.player.down = false;
+    this.player.health = 120;
+    this.player.armor = 40;
+    this.player.stamina = 100;
+    this.player.x = -60 + Math.random() * 120;
+    this.player.y = -40 + Math.random() * 120;
+    this.player.hint = 'Recovered at Skyline Safehouse';
+    this.player.money = Math.max(0, this.player.money - 350);
+    this._respawnTimer = -1;
+    this.clearCrimeBuckets();
+    this._wantedCleared = true;
+    this.ui.showToast('Respawned at Skyline Safehouse. Medical fees paid.', 'info');
+  }
+
+  _recalculateWanted() {
+    return Object.values(this.crimeBuckets).reduce((sum, amount) => sum + amount, 0);
+  }
+
   _maintainPopulation() {
     if (this.pedestrians.length < this._targetPedCount) {
-      const ped = new Pedestrian(this.player.x + (Math.random() - 0.5) * 400, this.player.y + (Math.random() - 0.5) * 400, this.assets.get('ped'));
+      const ped = new Pedestrian(
+        this.player.x + (Math.random() - 0.5) * 400,
+        this.player.y + (Math.random() - 0.5) * 400,
+        this.assets.get('ped')
+      );
       this.pedestrians.push(ped);
     }
     if (this.vehicles.length < this._targetVehicleCount) {
-      const vehicle = new Vehicle(this.player.x + 320 - Math.random() * 640, this.player.y + 320 - Math.random() * 640, Math.random() * Math.PI * 2, this.assets.get('car'));
+      const vehicle = new Vehicle(
+        this.player.x + 320 - Math.random() * 640,
+        this.player.y + 320 - Math.random() * 640,
+        Math.random() * Math.PI * 2,
+        this.assets.get('car')
+      );
       vehicle.ai = 'traffic';
       this.vehicles.push(vehicle);
     }
@@ -514,9 +623,9 @@ export class GameWorld {
   }
 
   _severityForValue(value) {
-    if (value >= 20) return 'critical';
-    if (value >= 12) return 'major';
-    if (value >= 6) return 'witness';
+    if (value >= 120) return 'critical';
+    if (value >= 60) return 'major';
+    if (value >= 25) return 'witness';
     return 'minor';
   }
 

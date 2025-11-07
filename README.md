@@ -7,7 +7,7 @@ Neon Grandline is a browser-first, top-down crime sandbox inspired by blockbuste
 - **Custom neon renderer** – A performant Canvas2D pipeline paints the city with depth-sorted building caps, emissive roads, weather-aware skies, and crisp SVG sprites for every character, vehicle, and loot drop.
 - **Playable sandbox loop** – Walk, sprint, aim, fire, loot, jack cars, bank scores, accept missions, and trigger escalating Metro responses. Crimes are bucketed logically so stray shots can’t catapult you to five stars.
 - **Upgraded assets** – All buildings, vehicles, weapons, UI panels, and character portraits ship as bespoke SVG illustrations—no emoji placeholders, no broken links. Missing textures gracefully fall back to a neon procedural tile.
-- **Police + economy tuning** – Wanted points cap per crime type, decay when you lay low, and spawn police/swat units appropriately. Garages sell upgradeable cars, banks support deposits or risky heists, and every casualty can drop cash.
+- **Police, AWL & economy tuning** – Active Wanted Level (AWL) points accrue per crime (e.g. +20 for vehicle theft, +100 for homicide), decay while you hide, and map cleanly onto the 50/120/300/600/1000 star thresholds. Metro patrols chase, ram, and fire from their cruisers while SWAT vans roll in at high stars. Garages sell upgradeable cars, banks support deposits or risky heists, and every casualty can drop cash.
 - **Quality-of-life UX** – A StaticQuasar931-branded lobby, animated loader with live progress, responsive HUD, ESC-powered pause/settings overlay, toasts, and mission prompts keep the action readable across the requested desktop resolutions.
 
 ## Quick start
@@ -38,17 +38,18 @@ Neon Grandline is a browser-first, top-down crime sandbox inspired by blockbuste
 - Mission seeds pick courier, getaway, or bank-heist beats and reward neon payouts when objectives complete.
 
 ### Gameplay systems
-- **Player** – Stamina-based sprinting, contextual interaction hints, weapon cooldowns, health/armor tracking, and seamless car entry/exit.
+- **Player** – Stamina-based sprinting, contextual interaction hints, weapon cooldowns, health/armor tracking, incapacitation/respawn at the Skyline safehouse, and seamless car entry/exit.
 - **Vehicles** – AI traffic lanes, steering physics, police pursuit behaviors, collision damage that can spawn loot and crimes, and player-owned deliveries from the garage catalogue.
 - **NPCs** – Civilian wanderers react to nearby chaos, panic under high wanted levels, and drop cash when taken out. Gang variants sport custom palettes; cops use ballistic vests.
-- **Crime telemetry** – Gunfire, vehicular collisions, theft, robberies, and homicides pour into capped buckets so misdemeanors stay minor while major offenses escalate to SWAT deployments.
+- **Crime telemetry** – Gunfire, vehicular collisions, theft, robberies, and homicides pour into capped buckets that produce AWL points while respecting per-crime ceilings, so stray shots stay minor yet repeated felonies summon elite responders.
+- **Police** – Metro units spawn based on the 50/120/300/600/1000 AWL thresholds, chase using upgraded pursuit AI, shoot from their cruisers, and fall back once you bleed off the heat. SWAT vans join at four stars, and destroying a unit feeds the crime buckets.
 - **Economy** – Garages sell high-end rides, weapons shops refill ammo or armor, boutiques provide cosmetic boosts, and banks handle safe deposits or high-risk robberies.
 - **Loot** – Neon cash chips bob over the pavement and auto-collect when the player brushes past.
 
 ### Interface & UX
 - Startup lobby with a refreshed city atlas, vehicle/weapons concept gallery, and StaticQuasar931 headline branding.
 - Animated loader card with percentage updates pulled straight from the asset manifest.
-- HUD with time-of-day, mission label, wanted stars, cash, vitals, vehicle status, hint rail, and a crime tracker feed (severity-coded).
+- HUD with time-of-day, mission label, wanted stars plus live AWL readout, cash, vitals, vehicle status, hint rail, and a crime tracker feed (severity-coded).
 - ESC pause overlay featuring resume/settings shortcuts, while toasts announce purchases, loot, patrol alerts, and mission status.
 
 ## Project structure

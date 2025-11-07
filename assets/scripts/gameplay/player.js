@@ -22,11 +22,18 @@ export class Player {
     this.hint = 'Press WASD to move · Shift to run';
     this.weapon = 'pistol';
     this.cooldown = 0;
+    this.down = false;
   }
 
   update(delta, world) {
     if (this.cooldown > 0) {
       this.cooldown -= delta;
+    }
+
+    if (this.down) {
+      this.speed = 0;
+      this.hint = 'Down – awaiting medics';
+      return;
     }
 
     if (this.vehicle) {
@@ -148,7 +155,7 @@ export class Player {
       this.vehicle = vehicle;
       vehicle.driver = this;
       if (!vehicle.owner || vehicle.owner !== 'player') {
-        world.reportCrime('Vehicle theft reported', 12, 'theft');
+        world.reportCrime('Vehicle theft reported', 20, 'theft');
       }
       world.ui.showToast(`Driving ${vehicle.name}`, 'info');
     }
@@ -160,8 +167,22 @@ export class Player {
     const direction = Math.atan2(world.pointerWorld.y - this.y, world.pointerWorld.x - this.x);
     const muzzleX = this.x + Math.cos(direction) * 24;
     const muzzleY = this.y + Math.sin(direction) * 24;
-    world.spawnBullet({ x: muzzleX, y: muzzleY, direction, speed: 560, owner: this });
-    world.reportCrime('Gunfire detected', 6, 'gunfire');
+    world.spawnBullet({ x: muzzleX, y: muzzleY, direction, speed: 560, owner: this, damage: 90 });
+    world.reportCrime('Gunfire detected', 18, 'gunfire');
+  }
+
+  takeDamage(amount, world) {
+    if (this.down) return;
+    const armorAbsorb = Math.min(this.armor, amount * 0.75);
+    this.armor = Math.max(0, this.armor - armorAbsorb);
+    const remaining = Math.max(0, amount - armorAbsorb * 0.6);
+    this.health = Math.max(0, this.health - remaining);
+    this.stamina = Math.max(0, this.stamina - amount * 0.1);
+    this.hint = 'Under fire! Seek cover.';
+    if (this.health <= 0) {
+      this.down = true;
+      world.onPlayerDown?.();
+    }
   }
 }
 

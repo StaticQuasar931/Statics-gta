@@ -86,14 +86,14 @@ export class Pedestrian {
       const bounty = this.role === 'cop' ? 40 + Math.floor(Math.random() * 60) : 80 + Math.floor(Math.random() * 120);
       world.spawnLoot(this.x, this.y, bounty);
       if (this.role === 'cop') {
-        world.reportCrime('Officer down', 32, 'homicide');
+        world.reportCrime('Officer down', 180, 'homicide');
       } else {
-        world.reportCrime('Civilian killed', 20, 'homicide');
+        world.reportCrime('Civilian killed', 100, 'homicide');
       }
     } else {
       this.panic = true;
       this.speed = PANIC_SPEED;
-      world.reportCrime('Shots fired near crowd', 8, 'gunfire');
+      world.reportCrime('Shots fired near crowd', 22, 'gunfire');
     }
   }
 }
