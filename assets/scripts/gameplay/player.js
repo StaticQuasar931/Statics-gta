@@ -160,6 +160,9 @@ export class Player {
       if (vehicle) {
         this.attachVehicle(vehicle);
         world.notify(`Entered ${vehicle.name}`);
+        if (vehicle.owner && vehicle.owner !== 'player') {
+          world.reportCrime('Vehicle theft', 'major', { ...vehicle.position }, { vehicle: vehicle.name });
+        }
       }
     } else {
       this.detachVehicle();
@@ -177,7 +180,7 @@ export class Player {
     };
     const direction = normalizeVec3({ x: Math.sin(this.heading), y: 0, z: Math.cos(this.heading) });
     world.spawnBullet({ origin: muzzle, direction, owner: this, damage: 28 });
-    world.raiseWanted(8);
+    world.reportCrime('Gunfire reported', 'major', { ...this.position }, { weapon: this.activeWeapon });
   }
 
   applyDamage(amount) {

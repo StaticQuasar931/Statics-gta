@@ -4,7 +4,7 @@ const BASE_ACCELERATION = 32;
 const BASE_TURN = 1.8;
 
 export class Vehicle {
-  constructor(node, { name = 'Vehicle', maxSpeed = 90, grip = 1, faction = 'civilian' } = {}) {
+  constructor(node, { name = 'Vehicle', maxSpeed = 90, grip = 1, faction = 'civilian' } = {}, attachments = []) {
     this.node = node;
     this.name = name;
     this.position = { x: 0, y: 2, z: 0 };
@@ -17,6 +17,7 @@ export class Vehicle {
     this.driver = null;
     this.ai = null;
     this.turnVelocity = 0;
+    this.attachments = attachments;
   }
 
   setPosition(x, y, z) {
@@ -28,6 +29,7 @@ export class Vehicle {
       this.node.position.y = y;
       this.node.position.z = z;
     }
+    this._updateAttachments();
   }
 
   setHeading(angle) {
@@ -35,6 +37,7 @@ export class Vehicle {
     if (this.node) {
       this.node.rotation.y = this.heading;
     }
+    this._updateAttachments();
   }
 
   control(throttle, steer, brake, delta, world) {
@@ -70,6 +73,14 @@ export class Vehicle {
       this.node.position.z = this.position.z;
       this.node.rotation.y = this.heading;
     }
+    this._updateAttachments();
+
+    if (this.driver) {
+      const collided = world.handleVehicleCollisions?.(this, delta);
+      if (collided) {
+        this.speed *= 0.7;
+      }
+    }
   }
 
   updateAI(delta, world) {
@@ -103,7 +114,7 @@ export class Vehicle {
     this.control(1, steer, brake, delta, world);
     if (distance < 6 && target.onFoot) {
       target.applyDamage(12 * delta);
-      world.raiseWanted(4);
+      world.reportCrime('Resisting arrest', 'major', { ...this.position }, { source: 'police' });
       world.notify('Police contact!');
     }
   }
@@ -119,5 +130,21 @@ export class Vehicle {
   takeDamage(amount) {
     this.health = Math.max(0, this.health - amount);
     return this.health <= 0;
+  }
+
+  _updateAttachments() {
+    if (!this.attachments?.length) return;
+    const sin = Math.sin(this.heading);
+    const cos = Math.cos(this.heading);
+    for (const attachment of this.attachments) {
+      const { node, offset = { x: 0, y: 0, z: 0 } } = attachment;
+      if (!node) continue;
+      const x = this.position.x + offset.x * cos + offset.z * sin;
+      const z = this.position.z + offset.z * cos - offset.x * sin;
+      node.position.x = x;
+      node.position.y = this.position.y + offset.y;
+      node.position.z = z;
+      node.rotation.y = this.heading;
+    }
   }
 }

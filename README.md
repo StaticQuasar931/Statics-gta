@@ -5,7 +5,9 @@ Neon Grandline is a browser-first, custom-rendered tribute to blockbuster open-w
 ## Highlights
 
 - **Hand-written 3D renderer** – A Canvas2D-based pipeline projects meshes, shades faces, and draws neon-lit skyscrapers, vehicles, and pedestrians with day/night aware lighting.
+- **Neon district layout** – Waterfront boardwalk, arterial roads, plazas, trees, and shop beacons carve the city into themed districts with varied palettes.
 - **Working city sandbox** – Walk, sprint, hijack cars, fire weapons, collect loot, trigger missions, visit shops, and watch wanted levels climb as Metro Patrol deploys cruisers.
+- **Crime telemetry** – Every gunshot, collision, or theft is logged with severity and wanted gain so you always know why the stars are flashing.
 - **Responsive UX** – A cinematic lobby starring StaticQuasar931, animated loader, branded HUD, toast notifications, and modal-driven settings all tuned for multiple desktop resolutions.
 - **Zero external dependencies** – Every asset (buildings, vehicles, characters, UI) is bundled as SVG; the game boots instantly without CDN calls or WebGL extensions.
 
@@ -31,24 +33,25 @@ Neon Grandline is a browser-first, custom-rendered tribute to blockbuster open-w
 
 ### World, rendering, and ambience
 - Canvas renderer with per-face lighting, back-face culling, and painter’s sort.
-- Procedural downtown: box/ prism meshes with randomized widths, heights, and emissive signage.
-- Massive ground and arterial road slab with collision blockers around every building.
-- Dynamic day/night loop that adjusts sky gradients, ambient light, and debug overlay.
+- Procedural downtown: tapered towers, rooftop signage, emissive windows, and planted plazas in four themed districts.
+- Waterfront boardwalk, ring roads, diagonal expressways, and glowing shop pylons to keep navigation readable at street level.
+- Dynamic day/night loop that adjusts sky gradients, ambient light, and debug overlay (now showing the active district).
 - Chase camera that tracks the player or mounted vehicle with distance smoothing.
 
 ### Gameplay systems
 - **Player**: walking, sprint stamina, health/armor pools, firearm cooldown, interaction hints, enter/exit vehicles.
-- **Vehicles**: throttle/brake, velocity-based steering, collision rejection, traffic AI that roams the grid, and owned vehicles purchased from the dealership.
+- **Vehicles**: throttle/brake, velocity-based steering, multi-part meshes with headlights/wheels, collision handling that injures pedestrians, and owned rides from the dealership.
 - **Police**: escalating wanted score with decay timer and patrol spawns that chase and damage the player if caught on foot.
-- **NPCs**: civilian/gang walkers that wander the sidewalks and report crimes, dropping cash when defeated.
+- **NPCs**: civilian/gang/police walkers with outfits, head meshes, and impact reactions that can drop cash or call in Metro Patrol.
 - **Economy**: dealership, garage, weapons vendor, and bank POIs offering purchases, repairs, and deposits via in-world modals.
 - **Loot**: animated cash shards bobbing above the pavement, immediately convertible to wallet funds.
 - **Missions**: rotating courier/heist/race gigs that auto-complete after a run timer, rewarding cash and resetting the HUD callout.
+- **Crime tracker**: unified logging that differentiates gunfire, vehicular assaults, theft, and patrol sightings while adjusting wanted stars.
 
 ### Interface
 - StaticQuasar931-branded lobby with concept art carousel and requested resolution list (1300×730 up to 1920×1080).
 - Animated loader card with progress shimmer while the sandbox spins up.
-- HUD showing time, mission name, wanted stars, cash, vitals, vehicle readout, and contextual hint text.
+- HUD showing time, mission name, wanted stars, cash, vitals, vehicle readout, contextual hints, and a live crime tracker feed.
 - Toast notifications for purchases, mission events, patrol alerts, and greetings.
 - Modal settings chooser offering three tuned simulation profiles.
 

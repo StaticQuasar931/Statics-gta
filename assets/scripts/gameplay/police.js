@@ -13,6 +13,11 @@ export class PoliceSystem {
     this.decayTimer = 12;
   }
 
+  reportCrime(_type, amount) {
+    this.addWanted(amount);
+    this.alert = true;
+  }
+
   update(delta) {
     if (this.wanted > 0) {
       this.decayTimer -= delta;

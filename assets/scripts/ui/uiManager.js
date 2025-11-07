@@ -80,18 +80,24 @@ export class UIManager {
           <span class="value">$0</span>
         </div>
       </div>
-      <div class="hud-bars">
-        <div class="bar">
-          <label>HP</label>
-          <span class="fill health"></span>
+      <div class="hud-main">
+        <div class="hud-bars">
+          <div class="bar">
+            <label>HP</label>
+            <span class="fill health"></span>
+          </div>
+          <div class="bar">
+            <label>Armor</label>
+            <span class="fill armor"></span>
+          </div>
+          <div class="bar">
+            <label>Stamina</label>
+            <span class="fill stamina"></span>
+          </div>
         </div>
-        <div class="bar">
-          <label>Armor</label>
-          <span class="fill armor"></span>
-        </div>
-        <div class="bar">
-          <label>Stamina</label>
-          <span class="fill stamina"></span>
+        <div class="crime-feed">
+          <h3>Crime Tracker</h3>
+          <ul></ul>
         </div>
       </div>
       <div class="hud-footer">
@@ -101,6 +107,7 @@ export class UIManager {
     `;
     this.root.appendChild(hud);
     this.hud = hud;
+    this.crimeList = hud.querySelector('.crime-feed ul');
   }
 
   _createModal() {
@@ -235,6 +242,22 @@ export class UIManager {
   populateFeatureList() {}
 
   updateWantedLevel() {}
+
+  logCrime(entry) {
+    if (!this.crimeList) return;
+    const item = document.createElement('li');
+    item.dataset.severity = entry.severity ?? 'minor';
+    const severityLabel = (entry.severity ?? 'minor').toUpperCase();
+    const meta = `${severityLabel} · ${Math.round(entry.wanted)} WP`;
+    item.innerHTML = `
+      <span class="crime-type">${entry.type}</span>
+      <span class="crime-meta">${entry.time ?? ''} ${meta}</span>
+    `;
+    this.crimeList.prepend(item);
+    while (this.crimeList.children.length > 5) {
+      this.crimeList.removeChild(this.crimeList.lastElementChild);
+    }
+  }
 
   _setBar(selector, value) {
     const bar = this.hud.querySelector(selector);
