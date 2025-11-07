@@ -1,109 +1,99 @@
-import { clamp } from '../engine/math.js';
+const WALK_SPEED = 40;
+const PANIC_SPEED = 110;
 
-const WALK_SPEED = 12;
-
-export class NPC {
-  constructor(node, { faction = 'civilian', mood = 'calm' } = {}, attachments = []) {
-    this.node = node;
-    this.position = { x: 0, y: 0, z: 0 };
+export class Pedestrian {
+  constructor(x, y, image, role = 'civilian') {
+    this.x = x;
+    this.y = y;
     this.heading = Math.random() * Math.PI * 2;
-    this.speed = WALK_SPEED * (0.7 + Math.random() * 0.6);
-    this.faction = faction;
-    this.mood = mood;
-    this.health = 60;
+    this.speed = WALK_SPEED;
+    this.image = image;
+    this.role = role;
+    this.radius = 16;
     this.dead = false;
-    this.timer = 0;
-    this.attachments = attachments;
-    this.impactCooldown = 0;
-  }
-
-  setPosition(x, y, z) {
-    this.position.x = x;
-    this.position.y = y;
-    this.position.z = z;
-    if (this.node) {
-      this.node.position.x = x;
-      this.node.position.y = y;
-      this.node.position.z = z;
-      this.node.rotation.y = this.heading;
-    }
-    this._updateAttachments();
+    this.panic = false;
+    this.timer = 3 + Math.random() * 4;
   }
 
   update(delta, world) {
     if (this.dead) return;
+
     this.timer -= delta;
-    this.impactCooldown = Math.max(0, this.impactCooldown - delta);
     if (this.timer <= 0) {
-      this.heading += (Math.random() - 0.5) * Math.PI * 0.5;
-      this.timer = 2 + Math.random() * 4;
+      this.timer = 2 + Math.random() * 3;
+      this.heading += (Math.random() - 0.5) * Math.PI * 0.7;
+      if (this.panic) {
+        this.speed = PANIC_SPEED;
+      } else {
+        this.speed = WALK_SPEED + Math.random() * 20;
+      }
     }
 
-    const dx = Math.sin(this.heading) * this.speed * delta;
-    const dz = Math.cos(this.heading) * this.speed * delta;
-    const targetX = this.position.x + dx;
-    const targetZ = this.position.z + dz;
-    if (!world.isBlocked(targetX, targetZ, 2.2)) {
-      this.position.x = targetX;
-      this.position.z = targetZ;
+    if (world.wanted > 50 && Math.random() < 0.01) {
+      this.panic = true;
+      this.speed = PANIC_SPEED;
+    }
+
+    this.x += Math.cos(this.heading) * this.speed * delta;
+    this.y += Math.sin(this.heading) * this.speed * delta;
+
+    const limit = 1100;
+    if (this.x < -limit || this.x > limit || this.y < -limit || this.y > limit) {
+      this.heading += Math.PI;
+    }
+
+    if (Math.random() < 0.002 && this.role !== 'cop') {
+      world.spawnLoot(this.x, this.y, 30 + Math.floor(Math.random() * 60));
+    }
+
+    const distanceToPlayer = Math.hypot(world.player.x - this.x, world.player.y - this.y);
+    if (distanceToPlayer < 140 && world.player.vehicle && !this.panic) {
+      this.panic = true;
+      this.speed = PANIC_SPEED;
+    }
+  }
+
+  draw(ctx) {
+    if (this.dead) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.heading);
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = '#ff5166';
+      ctx.fillRect(-18, -6, 36, 12);
+      ctx.restore();
+      return;
+    }
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.heading);
+    if (this.image) {
+      ctx.drawImage(this.image, -20, -26, 40, 52);
     } else {
-      this.heading += Math.PI * 0.5;
+      ctx.fillStyle = this.role === 'gang' ? '#ff6b6b' : '#9bc9ff';
+      ctx.beginPath();
+      ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+      ctx.fill();
     }
-
-    this.position.y = world.sampleHeight(this.position.x, this.position.z);
-
-    if (this.node) {
-      this.node.position.x = this.position.x;
-      this.node.position.y = this.position.y;
-      this.node.position.z = this.position.z;
-      this.node.rotation.y = this.heading;
-    }
-    this._updateAttachments();
-
-    if (this.faction === 'police') {
-      const distance = Math.hypot(world.player.position.x - this.position.x, world.player.position.z - this.position.z);
-      if (distance < 18 && world.player.wanted > 0) {
-        world.reportCrime('Spotted by patrol', 'minor', { ...this.position }, { source: 'police', silent: true });
-        world.notify('Police spotted you!');
-      }
-    }
+    ctx.restore();
   }
 
-  takeDamage(amount) {
-    this.health = clamp(this.health - amount, 0, 80);
-    if (this.health <= 0) {
+  takeDamage(amount, world) {
+    if (this.dead) return;
+    if (amount > 50) {
       this.dead = true;
-      if (this.node) {
-        this.node.hidden = true;
+      const bounty = this.role === 'cop' ? 40 + Math.floor(Math.random() * 60) : 80 + Math.floor(Math.random() * 120);
+      world.spawnLoot(this.x, this.y, bounty);
+      if (this.role === 'cop') {
+        world.reportCrime('Officer down', 32, 'homicide');
+      } else {
+        world.reportCrime('Civilian killed', 20, 'homicide');
       }
-      for (const attachment of this.attachments) {
-        if (attachment.node) {
-          attachment.node.hidden = true;
-        }
-      }
-    }
-  }
-
-  registerImpact(force) {
-    if (this.dead || this.impactCooldown > 0) return null;
-    this.impactCooldown = 1.2;
-    this.takeDamage(force);
-    return this.dead ? 'fatal' : 'injured';
-  }
-
-  _updateAttachments() {
-    if (!this.attachments?.length) return;
-    const sin = Math.sin(this.heading);
-    const cos = Math.cos(this.heading);
-    for (const attachment of this.attachments) {
-      const { node, offset = { x: 0, y: 0, z: 0 } } = attachment;
-      if (!node) continue;
-      const x = this.position.x + offset.x * cos + offset.z * sin;
-      const z = this.position.z + offset.z * cos - offset.x * sin;
-      node.position.x = x;
-      node.position.y = this.position.y + offset.y;
-      node.position.z = z;
-      node.rotation.y = this.heading;
+    } else {
+      this.panic = true;
+      this.speed = PANIC_SPEED;
+      world.reportCrime('Shots fired near crowd', 8, 'gunfire');
     }
   }
 }

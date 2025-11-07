@@ -1,14 +1,32 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 200'>
-  <rect width='160' height='200' fill='#05060f'/>
-  <g transform='translate(40,30)'>
-    <circle cx='40' cy='32' r='28' fill='#f1c27d'/>
-    <rect x='10' y='60' width='60' height='80' rx='20' fill='#6a040f'/>
-    <rect x='0' y='80' width='20' height='70' rx='10' fill='#f3722c'/>
-    <rect x='60' y='80' width='20' height='70' rx='10' fill='#f3722c'/>
-    <rect x='24' y='132' width='12' height='42' fill='#2f2f2f' rx='6'/>
-    <rect x='52' y='132' width='12' height='42' fill='#2f2f2f' rx='6'/>
-    <rect x='25' y='64' width='30' height='10' fill='#000' opacity='0.5'/>
-    <circle cx='40' cy='120' r='12' fill='#000' opacity='0.35'/>
+<svg width="160" height="200" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="200" rx="22" fill="url(#bg)"/>
+  <g transform="translate(30 24)">
+    <path d="M50 16c14 0 26 12 26 26s-12 26-26 26-26-12-26-26 12-26 26-26z" fill="url(#skin)" stroke="#1A1524" stroke-width="5"/>
+    <path d="M50 70c30 0 54 24 54 56v20H-4v-20c0-32 24-56 54-56z" fill="url(#coat)" stroke="#1A1524" stroke-width="5"/>
+    <path d="M12 110c24 10 52 10 76 0v32H12v-32z" fill="rgba(255,255,255,0.16)"/>
+    <path d="M16 142h68v30l-18 14-16-10-16 10-18-14v-30z" fill="url(#pants)" stroke="#0C0A12" stroke-width="5"/>
+    <path d="M32 44l18-10 20 10" stroke="#0C0A12" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="38" cy="34" r="4.5" fill="#0C0A12"/>
+    <circle cx="60" cy="34" r="4.5" fill="#0C0A12"/>
+    <path d="M38 52c8 6 16 6 24 0" stroke="#0C0A12" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-4 142h104" stroke="rgba(255,255,255,0.12)" stroke-width="6" stroke-linecap="round"/>
   </g>
-  <text x='80' y='186' text-anchor='middle' font-family='Segoe UI, sans-serif' font-size='14' fill='rgba(255,255,255,0.7)'>Gang</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="160" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A0F22"/>
+      <stop offset="1" stop-color="#321A2C"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="24" y1="16" x2="76" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB995"/>
+      <stop offset="1" stop-color="#D97963"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="-4" y1="70" x2="104" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF5C7A"/>
+      <stop offset="1" stop-color="#FF934F"/>
+    </linearGradient>
+    <linearGradient id="pants" x1="16" y1="142" x2="84" y2="196" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1B0F24"/>
+      <stop offset="1" stop-color="#0A060C"/>
+    </linearGradient>
+  </defs>
 </svg>

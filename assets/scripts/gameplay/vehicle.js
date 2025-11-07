@@ -1,150 +1,130 @@
-import { clamp } from '../engine/math.js';
-
-const BASE_ACCELERATION = 32;
-const BASE_TURN = 1.8;
+const BASE_FRICTION = 0.92;
+const BRAKE_FORCE = 0.7;
+const STEER_SPEED = 2.6;
 
 export class Vehicle {
-  constructor(node, { name = 'Vehicle', maxSpeed = 90, grip = 1, faction = 'civilian' } = {}, attachments = []) {
-    this.node = node;
-    this.name = name;
-    this.position = { x: 0, y: 2, z: 0 };
-    this.heading = 0;
+  constructor(x, y, heading, image) {
+    this.x = x;
+    this.y = y;
+    this.heading = heading;
     this.speed = 0;
-    this.maxSpeed = maxSpeed;
-    this.grip = grip;
-    this.faction = faction;
-    this.health = 150;
+    this.image = image;
     this.driver = null;
+    this.radius = 26;
+    this.name = randomName();
+    this.maxSpeed = 240;
+    this.acceleration = 120;
+    this.faction = 'civ';
+    this.locked = false;
     this.ai = null;
-    this.turnVelocity = 0;
-    this.attachments = attachments;
+    this.owner = 'civ';
   }
 
-  setPosition(x, y, z) {
-    this.position.x = x;
-    this.position.y = y;
-    this.position.z = z;
-    if (this.node) {
-      this.node.position.x = x;
-      this.node.position.y = y;
-      this.node.position.z = z;
+  update(delta, world) {
+    if (!this.driver) {
+      if (this.ai === 'traffic') {
+        this._updateTraffic(delta, world);
+      } else if (this.ai === 'police') {
+        this._updatePolice(delta, world);
+      }
     }
-    this._updateAttachments();
-  }
 
-  setHeading(angle) {
-    this.heading = angle;
-    if (this.node) {
-      this.node.rotation.y = this.heading;
+    this.x += Math.cos(this.heading) * this.speed * delta;
+    this.y += Math.sin(this.heading) * this.speed * delta;
+
+    this.speed *= BASE_FRICTION;
+
+    if (Math.abs(this.speed) < 2) {
+      this.speed = 0;
     }
-    this._updateAttachments();
+
+    if (this.driver === world.player) {
+      this._checkCollisions(world);
+    }
   }
 
   control(throttle, steer, brake, delta, world) {
-    const accel = BASE_ACCELERATION * throttle;
-    if (brake > 0) {
-      this.speed = clamp(this.speed - brake * 60 * delta, -this.maxSpeed * 0.35, this.maxSpeed);
-    }
-    this.speed += accel * delta;
-    const drag = 1 - Math.min(Math.abs(this.speed) / this.maxSpeed, 1) * 0.08;
-    this.speed *= drag;
-    this.speed = clamp(this.speed, -this.maxSpeed * 0.35, this.maxSpeed);
-
-    if (Math.abs(this.speed) > 2) {
-      this.heading += steer * BASE_TURN * delta * this.grip * Math.sign(this.speed);
+    const targetSpeed = throttle * this.maxSpeed;
+    const acceleration = this.acceleration * delta;
+    if (throttle !== 0) {
+      this.speed += (targetSpeed - this.speed) * Math.min(1, acceleration / this.maxSpeed);
     }
 
-    const dx = Math.sin(this.heading) * this.speed * delta;
-    const dz = Math.cos(this.heading) * this.speed * delta;
-    const targetX = this.position.x + dx;
-    const targetZ = this.position.z + dz;
-    if (!world.isBlocked(targetX, targetZ, 4.4)) {
-      this.position.x = targetX;
-      this.position.z = targetZ;
-    } else {
-      this.speed *= -0.4;
+    if (brake) {
+      this.speed *= BRAKE_FORCE;
     }
 
-    this.position.y = world.sampleHeight(this.position.x, this.position.z) + 2;
-
-    if (this.node) {
-      this.node.position.x = this.position.x;
-      this.node.position.y = this.position.y;
-      this.node.position.z = this.position.z;
-      this.node.rotation.y = this.heading;
+    if (this.speed !== 0) {
+      this.heading += steer * STEER_SPEED * delta * Math.sign(this.speed);
     }
-    this._updateAttachments();
 
-    if (this.driver) {
-      const collided = world.handleVehicleCollisions?.(this, delta);
-      if (collided) {
-        this.speed *= 0.7;
+    this.x = Math.max(-BOUND, Math.min(BOUND, this.x));
+    this.y = Math.max(-BOUND, Math.min(BOUND, this.y));
+
+    if (this.driver === world.player) {
+      const target = world.pointerWorld;
+      if (target) {
+        this.heading += ((Math.atan2(target.y - this.y, target.x - this.x) - this.heading + Math.PI * 3) % (Math.PI * 2) - Math.PI * 1.5) * 0.02;
       }
     }
   }
 
-  updateAI(delta, world) {
-    if (!this.ai) return;
-    if (this.ai.type === 'traffic') {
-      this._trafficUpdate(delta, world);
-    } else if (this.ai.type === 'police') {
-      this._policeUpdate(delta, world);
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.heading);
+    if (this.image) {
+      ctx.drawImage(this.image, -36, -20, 72, 40);
+    } else {
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(-32, -18, 64, 36);
+    }
+    ctx.restore();
+  }
+
+  _checkCollisions(world) {
+    for (const ped of world.pedestrians) {
+      if (ped.dead) continue;
+      const distance = Math.hypot(ped.x - this.x, ped.y - this.y);
+      if (distance < this.radius + ped.radius) {
+        ped.takeDamage(Math.abs(this.speed) * 0.6 + 20, world);
+        world.reportCrime('Vehicular impact', 8, 'collision');
+        if (ped.dead) {
+          world.reportCrime('Vehicular manslaughter', 16, 'homicide');
+          const payout = 120 + Math.floor(Math.random() * 180);
+          world.spawnLoot(ped.x, ped.y, payout);
+        }
+      }
     }
   }
 
-  _trafficUpdate(delta, world) {
-    const target = this.ai.target;
-    if (!target || Math.hypot(target.x - this.position.x, target.z - this.position.z) < 8) {
-      this.ai.target = world.pickTrafficDestination();
+  _updateTraffic(delta, world) {
+    if (Math.abs(this.speed) < 20) {
+      this.speed = 80 + Math.random() * 40;
     }
-    const direction = Math.atan2(target.x - this.position.x, target.z - this.position.z);
-    const steerError = ((direction - this.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    const steer = clamp(steerError / Math.PI, -1, 1);
-    this.control(0.9, steer, 0, delta, world);
+    this.heading += Math.sin(world.dayTime / 60 + this.x * 0.001) * 0.01;
   }
 
-  _policeUpdate(delta, world) {
-    const { target } = this.ai;
-    if (!target) return;
-    const direction = Math.atan2(target.position.x - this.position.x, target.position.z - this.position.z);
-    const steerError = ((direction - this.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-    const steer = clamp(steerError / Math.PI, -1, 1);
-    const distance = Math.hypot(target.position.x - this.position.x, target.position.z - this.position.z);
-    const brake = distance < 15 ? 0.6 : 0;
-    this.control(1, steer, brake, delta, world);
-    if (distance < 6 && target.onFoot) {
-      target.applyDamage(12 * delta);
-      world.reportCrime('Resisting arrest', 'major', { ...this.position }, { source: 'police' });
-      world.notify('Police contact!');
+  _updatePolice(delta, world) {
+    const target = world.player;
+    const dx = target.x - this.x;
+    const dy = target.y - this.y;
+    const angle = Math.atan2(dy, dx);
+    const steer = Math.sin(angle - this.heading);
+    this.heading += steer * 2.8 * delta;
+    const distance = Math.hypot(dx, dy);
+    const desired = distance > 140 ? this.maxSpeed : this.maxSpeed * 0.4;
+    this.speed += (desired - this.speed) * 0.6 * delta;
+    if (distance < 80 && world.player.vehicle === this) {
+      world.reportCrime('Police collision', 6, 'collision');
     }
   }
+}
 
-  getSeatPosition() {
-    return {
-      x: this.position.x + Math.sin(this.heading) * 1.2,
-      y: this.position.y + 1.6,
-      z: this.position.z + Math.cos(this.heading) * 1.2,
-    };
-  }
+const BOUND = 1100;
 
-  takeDamage(amount) {
-    this.health = Math.max(0, this.health - amount);
-    return this.health <= 0;
-  }
-
-  _updateAttachments() {
-    if (!this.attachments?.length) return;
-    const sin = Math.sin(this.heading);
-    const cos = Math.cos(this.heading);
-    for (const attachment of this.attachments) {
-      const { node, offset = { x: 0, y: 0, z: 0 } } = attachment;
-      if (!node) continue;
-      const x = this.position.x + offset.x * cos + offset.z * sin;
-      const z = this.position.z + offset.z * cos - offset.x * sin;
-      node.position.x = x;
-      node.position.y = this.position.y + offset.y;
-      node.position.z = z;
-      node.rotation.y = this.heading;
-    }
-  }
+function randomName() {
+  const prefixes = ['Aurora', 'Pulse', 'Vortex', 'Phantom', 'Metro'];
+  const suffixes = ['GT', 'Runner', 'Cruiser', 'Sprint', 'Wave'];
+  return `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
 }

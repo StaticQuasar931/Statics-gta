@@ -1,22 +1,21 @@
 # Neon Grandline · StaticQuasar931 Edition
 
-Neon Grandline is a browser-first, custom-rendered tribute to blockbuster open-world sandboxes. It runs entirely in vanilla HTML, CSS, and JavaScript—no build step, no external engines. A bespoke software renderer draws the city, vehicles, and characters on a single `<canvas>` element so everything works the moment you drop the repo on GitHub Pages.
+Neon Grandline is a browser-first, top-down crime sandbox inspired by blockbuster open-world series. Every system—world generation, rendering, AI, economy, UI—is hand-written in vanilla HTML/CSS/JS so the experience launches instantly on GitHub Pages with zero build tooling or external engines.
 
 ## Highlights
 
-- **Hand-written 3D renderer** – A Canvas2D-based pipeline projects meshes, shades faces, and draws neon-lit skyscrapers, vehicles, and pedestrians with day/night aware lighting.
-- **Neon district layout** – Waterfront boardwalk, arterial roads, plazas, trees, and shop beacons carve the city into themed districts with varied palettes.
-- **Working city sandbox** – Walk, sprint, hijack cars, fire weapons, collect loot, trigger missions, visit shops, and watch wanted levels climb as Metro Patrol deploys cruisers.
-- **Crime telemetry** – Every gunshot, collision, or theft is logged with severity and wanted gain so you always know why the stars are flashing.
-- **Responsive UX** – A cinematic lobby starring StaticQuasar931, animated loader, branded HUD, toast notifications, and modal-driven settings all tuned for multiple desktop resolutions.
-- **Zero external dependencies** – Every asset (buildings, vehicles, characters, UI) is bundled as SVG; the game boots instantly without CDN calls or WebGL extensions.
+- **Custom neon renderer** – A performant Canvas2D pipeline paints the city with depth-sorted building caps, emissive roads, weather-aware skies, and crisp SVG sprites for every character, vehicle, and loot drop.
+- **Playable sandbox loop** – Walk, sprint, aim, fire, loot, jack cars, bank scores, accept missions, and trigger escalating Metro responses. Crimes are bucketed logically so stray shots can’t catapult you to five stars.
+- **Upgraded assets** – All buildings, vehicles, weapons, UI panels, and character portraits ship as bespoke SVG illustrations—no emoji placeholders, no broken links. Missing textures gracefully fall back to a neon procedural tile.
+- **Police + economy tuning** – Wanted points cap per crime type, decay when you lay low, and spawn police/swat units appropriately. Garages sell upgradeable cars, banks support deposits or risky heists, and every casualty can drop cash.
+- **Quality-of-life UX** – A StaticQuasar931-branded lobby, animated loader with live progress, responsive HUD, ESC-powered pause/settings overlay, toasts, and mission prompts keep the action readable across the requested desktop resolutions.
 
 ## Quick start
 
-1. Serve the folder (e.g. `python -m http.server 8000`).
+1. Serve the project (for example, `python -m http.server 8000`).
 2. Open `http://localhost:8000` in Chrome, Firefox, Safari, or Edge.
-3. Click **Launch City**—the loader will fade out and drop you into Neon Grandline.
-4. Use the lobby **Settings** button at any time to apply performance, balanced, or cinematic simulation profiles.
+3. Click **Launch City**. Assets preload, the loader tracks progress, and the simulation fades in automatically.
+4. Use **Settings** (from the lobby or pause overlay) to toggle Performance, Balanced, or Cinematic density/fidelity profiles.
 
 ## Controls
 
@@ -24,84 +23,82 @@ Neon Grandline is a browser-first, custom-rendered tribute to blockbuster open-w
 | ------ | ----- |
 | Move on foot | `W` `A` `S` `D` |
 | Sprint | Hold `Shift` |
-| Fire weapon | Left click / tap |
+| Aim & fire | Mouse move + left click / tap |
 | Interact (loot, shops, vehicles) | `E` |
-| Brake / drift in vehicles | `Space` |
-| Toggle mission | Lobby **Roll Mission** |
+| Brake / drift while driving | `Space` |
+| Pause / resume & open overlay | `Esc` |
+| Request a random mission | Lobby **Roll Mission** |
 
 ## Feature tour
 
-### World, rendering, and ambience
-- Canvas renderer with per-face lighting, back-face culling, and painter’s sort.
-- Procedural downtown: tapered towers, rooftop signage, emissive windows, and planted plazas in four themed districts.
-- Waterfront boardwalk, ring roads, diagonal expressways, and glowing shop pylons to keep navigation readable at street level.
-- Dynamic day/night loop that adjusts sky gradients, ambient light, and debug overlay (now showing the active district).
-- Chase camera that tracks the player or mounted vehicle with distance smoothing.
+### World, ambience, and rendering
+- Canvas renderer with sky gradients (day/dusk/night), camera smoothing, and screen-to-world pointer mapping for precise aiming.
+- Semi-procedural districts: arterial and diagonal roads, plazas, waterfront palettes, and shop beacons seeded per session.
+- Tile-based ground shading plus highlight passes so building roofs pop while roads keep their lane markings.
+- Mission seeds pick courier, getaway, or bank-heist beats and reward neon payouts when objectives complete.
 
 ### Gameplay systems
-- **Player**: walking, sprint stamina, health/armor pools, firearm cooldown, interaction hints, enter/exit vehicles.
-- **Vehicles**: throttle/brake, velocity-based steering, multi-part meshes with headlights/wheels, collision handling that injures pedestrians, and owned rides from the dealership.
-- **Police**: escalating wanted score with decay timer and patrol spawns that chase and damage the player if caught on foot.
-- **NPCs**: civilian/gang/police walkers with outfits, head meshes, and impact reactions that can drop cash or call in Metro Patrol.
-- **Economy**: dealership, garage, weapons vendor, and bank POIs offering purchases, repairs, and deposits via in-world modals.
-- **Loot**: animated cash shards bobbing above the pavement, immediately convertible to wallet funds.
-- **Missions**: rotating courier/heist/race gigs that auto-complete after a run timer, rewarding cash and resetting the HUD callout.
-- **Crime tracker**: unified logging that differentiates gunfire, vehicular assaults, theft, and patrol sightings while adjusting wanted stars.
+- **Player** – Stamina-based sprinting, contextual interaction hints, weapon cooldowns, health/armor tracking, and seamless car entry/exit.
+- **Vehicles** – AI traffic lanes, steering physics, police pursuit behaviors, collision damage that can spawn loot and crimes, and player-owned deliveries from the garage catalogue.
+- **NPCs** – Civilian wanderers react to nearby chaos, panic under high wanted levels, and drop cash when taken out. Gang variants sport custom palettes; cops use ballistic vests.
+- **Crime telemetry** – Gunfire, vehicular collisions, theft, robberies, and homicides pour into capped buckets so misdemeanors stay minor while major offenses escalate to SWAT deployments.
+- **Economy** – Garages sell high-end rides, weapons shops refill ammo or armor, boutiques provide cosmetic boosts, and banks handle safe deposits or high-risk robberies.
+- **Loot** – Neon cash chips bob over the pavement and auto-collect when the player brushes past.
 
-### Interface
-- StaticQuasar931-branded lobby with concept art carousel and requested resolution list (1300×730 up to 1920×1080).
-- Animated loader card with progress shimmer while the sandbox spins up.
-- HUD showing time, mission name, wanted stars, cash, vitals, vehicle readout, contextual hints, and a live crime tracker feed.
-- Toast notifications for purchases, mission events, patrol alerts, and greetings.
-- Modal settings chooser offering three tuned simulation profiles.
+### Interface & UX
+- Startup lobby with a refreshed city atlas, vehicle/weapons concept gallery, and StaticQuasar931 headline branding.
+- Animated loader card with percentage updates pulled straight from the asset manifest.
+- HUD with time-of-day, mission label, wanted stars, cash, vitals, vehicle status, hint rail, and a crime tracker feed (severity-coded).
+- ESC pause overlay featuring resume/settings shortcuts, while toasts announce purchases, loot, patrol alerts, and mission status.
 
 ## Project structure
 
 ```
 index.html                     # Minimal entrypoint with inline favicon
 assets/
-  images/                      # SVG placeholders for buildings, vehicles, weapons, characters, UI
+  images/                      # Curated SVG art for people, vehicles, loot, UI, and maps
   scripts/
-    main.js                    # Boots the app once the DOM is ready
-    app.js                     # Manages UI wiring, settings modal, and render loop
+    main.js                    # Boots the application
+    app.js                     # Orchestrates UI, world lifecycle, settings, and loop
     core/
-      input.js                 # Keyboard / pointer / touch tracking
+      input.js                 # Keyboard, pointer, and touch handling
     engine/
-      math.js                  # Small vector helpers and color utilities
-      meshes.js                # Primitive generators (boxes, prisms, extrusions)
-      renderer.js              # Software renderer that projects and shades meshes
+      assets.js                # Asset manifest loader with neon fallbacks
+      renderer.js              # Camera-aware Canvas2D renderer
     gameplay/
-      world.js                 # City generation, update loop, collisions, bullets
-      player.js                # Player state, movement, interaction, weapons
-      vehicle.js               # Vehicle dynamics + AI steering
-      npc.js                   # Civilian/gang walker behaviour
-      police.js                # Wanted level and patrol spawns
-      economy.js               # Shop catalogue and purchase flows
-      missions.js              # Mission selection + completion rewards
+      world.js                 # City generation, update loop, crime handling, rendering glue
+      player.js                # Player movement, stamina, weapons, interactions
+      vehicle.js               # Vehicle physics and AI modes (traffic/police)
+      npc.js                   # Pedestrian behaviour, panic, and damage resolution
+      police.js                # Wanted level management and patrol spawning
+      economy.js               # Garage, shop, and bank logic
+      missions.js              # Mission templates, timers, rewards
       loot.js                  # Animated cash pickups
     ui/
-      uiManager.js             # Lobby, loader, HUD, modal, toast logic
+      uiManager.js             # Lobby, loader, HUD, modal, toast, and pause overlay management
   styles/
-    style.css                  # Lobby, loader, HUD, modal, and responsive rules
+    style.css                  # Lobby, HUD, loader, pause overlay, and responsive rules
 ```
 
 ## Compatibility
 
-- Designed for modern desktop browsers (Chrome, Edge, Safari, Firefox) with Canvas2D acceleration enabled.
-- Works at the requested 1300×730, 1366×768, 1517×852, 1536×864, and 1920×1080 resolutions; the layout gracefully compresses below 900px wide.
-- Touch input (taps = fire, long press = interact) is automatically recognised via the input manager.
+- Optimised for the requested desktop resolutions: 1300×730, 1366×768, 1517×852, 1536×864, and 1920×1080.
+- Works in the latest Chrome, Edge, Firefox, and Safari releases with Canvas2D acceleration.
+- Touch devices receive mapped pointer events (tap to fire, long-press to interact) via the shared input manager, making future mobile tuning straightforward.
 
 ## Developer hooks
 
-The global `window.gameApp` reference exposes the running `App` instance. From the console you can trigger quick tweaks:
+A global `window.gameApp` reference exposes the live `App` instance. From the console you can script quick experiments:
 
 ```js
-// Force a cinematic profile
-window.gameApp._openSettingsModal();
-window.gameApp.world.applySettings({ fidelity: 1.3, density: 1.3 });
+// Toggle cinematic density on the fly
+gameApp.world.applySettings({ fidelity: 1.3, density: 1.3 });
 
-// Spawn a custom vehicle
-window.gameApp.world.spawnOwnedVehicle({ label: 'Dev Prototype', maxSpeed: 160 }, window.gameApp.world.player);
+// Deliver a dev-only prototype vehicle
+gameApp.world.spawnOwnedVehicle({ label: 'Dev Prototype', maxSpeed: 360 }, gameApp.world.player);
+
+// Pause or resume programmatically
+gameApp.world.togglePause();
 ```
 
-Drop the repo into your GitHub Pages site and Neon Grandline is ready for StaticQuasar931’s audience—no extra build tooling required.
+Drop the repo onto GitHub Pages and Neon Grandline boots immediately—no extra build step, no asset hunting. Every graphic, system, and quality-of-life feature is wired for StaticQuasar931’s audience out of the box.

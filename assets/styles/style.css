@@ -233,14 +233,8 @@ body {
 .loader-text .progress span {
   display: block;
   height: 100%;
-  width: 100%;
+  width: 0%;
   background: linear-gradient(120deg, var(--accent), var(--accent-strong));
-  animation: loader-pulse 1.6s linear infinite;
-}
-
-@keyframes loader-pulse {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
 
 .hud {
@@ -255,6 +249,11 @@ body {
 
 .hud.hidden {
   opacity: 0;
+}
+
+.hud.paused {
+  filter: blur(2px) brightness(0.72);
+  pointer-events: auto;
 }
 
 .hud-top {
@@ -426,6 +425,65 @@ body {
   padding: 12px 18px;
   font-size: 0.95rem;
   letter-spacing: 0.04rem;
+}
+
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px) saturate(140%);
+  background: rgba(6, 10, 18, 0.72);
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.pause-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pause-card {
+  padding: 32px 40px;
+  border-radius: 18px;
+  background: rgba(18, 24, 44, 0.95);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  max-width: 420px;
+}
+
+.pause-card h2 {
+  margin: 0 0 12px;
+  font-size: 2rem;
+  letter-spacing: 0.12rem;
+}
+
+.pause-card p {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.pause-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.pause-actions button {
+  pointer-events: auto;
+  padding: 12px 28px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.pause-actions button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .toast-stack {

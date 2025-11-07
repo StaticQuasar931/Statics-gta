@@ -1,21 +1,49 @@
-const MISSIONS = [
+const MISSION_POOL = [
   {
-    id: 'courier',
-    label: 'Neon Courier',
-    description: 'Deliver a payload to the harbor district without losing your vehicle.',
-    reward: 2200,
+    label: 'Courier Dash',
+    description: 'Race across Neon Square to deliver encrypted drives.',
+    duration: 120,
+    reward: 650,
+    start(world) {
+      this.target = { x: world.player.x + 280, y: world.player.y - 120 };
+    },
+    update(delta, world) {
+      const distance = Math.hypot(world.player.x - this.target.x, world.player.y - this.target.y);
+      if (distance < 60) {
+        this.completed = true;
+      }
+    },
   },
   {
-    id: 'heist',
-    label: 'Micro Vault Heist',
-    description: 'Infiltrate the Skyline Bank branch and escape with any loot you find.',
-    reward: 5600,
+    label: 'High Stakes Escape',
+    description: 'Steal a sports car and outrun the Metro patrol for two minutes.',
+    duration: 150,
+    reward: 900,
+    start(world) {
+      world.reportCrime('Mission: carjacking underway', 18, 'theft');
+    },
+    update(delta, world) {
+      if (world.player.vehicle && world.police.level >= 2) {
+        this.timerWhileDriving = (this.timerWhileDriving ?? 0) + delta;
+        if (this.timerWhileDriving >= 40) {
+          this.completed = true;
+        }
+      }
+    },
   },
   {
-    id: 'race',
-    label: 'Gridlock Grand Prix',
-    description: 'Win a night sprint through Downtown traffic checkpoints.',
-    reward: 3200,
+    label: 'Vault Breach',
+    description: 'Hit the Aurora Bank and escape with $1500.',
+    duration: 180,
+    reward: 1500,
+    start(world) {
+      this.collected = 0;
+    },
+    update(delta, world) {
+      if (world.player.money >= (this.startingMoney ??= world.player.money) + 1500) {
+        this.completed = true;
+      }
+    },
   },
 ];
 
@@ -23,22 +51,34 @@ export class MissionSystem {
   constructor(ui) {
     this.ui = ui;
     this.activeMission = null;
-    this.progress = 0;
   }
 
-  nextMission(player) {
-    const mission = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+  nextMission(world) {
+    const missionTemplate = MISSION_POOL[Math.floor(Math.random() * MISSION_POOL.length)];
+    const mission = { ...missionTemplate };
+    mission.elapsed = 0;
+    mission.completed = false;
+    mission.failed = false;
+    mission.start?.(world);
     this.activeMission = mission;
-    this.progress = 0;
-    this.ui.showToast(`Mission started: ${mission.label}`, 'info');
     this.ui.showMission(mission.label, mission.description);
   }
 
-  completeMission(player) {
+  update(delta, world) {
     if (!this.activeMission) return;
-    player.money += this.activeMission.reward;
-    this.ui.showToast(`Mission complete! Earned $${this.activeMission.reward.toLocaleString()}`, 'success');
-    this.ui.showMission('Free Roam', 'Explore, earn cash, or trigger another mission.');
-    this.activeMission = null;
+    const mission = this.activeMission;
+    mission.elapsed += delta;
+    mission.update?.(delta, world);
+    if (mission.completed) {
+      world.player.money += mission.reward;
+      this.ui.showToast(`${mission.label} complete! +$${mission.reward}`, 'success');
+      world.reportCrime('Mission complete payout', 0, 'gunfire');
+      this.activeMission = null;
+      return;
+    }
+    if (mission.elapsed >= mission.duration) {
+      this.ui.showToast(`${mission.label} failed`, 'error');
+      this.activeMission = null;
+    }
   }
 }

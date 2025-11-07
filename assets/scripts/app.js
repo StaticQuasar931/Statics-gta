@@ -23,6 +23,7 @@ export class App {
     };
 
     this._bindUI();
+    this._bindKeyboard();
   }
 
   async start() {
@@ -33,6 +34,7 @@ export class App {
     await this.world.init();
     this.ui.hideLobby();
     this.ui.showHUD();
+    this.ui.togglePause(false);
     this.running = true;
     this._loop();
     this.ui.showToast('Welcome back to Neon Grandline, StaticQuasar931!', 'success');
@@ -44,6 +46,7 @@ export class App {
     this.world?.destroy();
     this.canvasHost.innerHTML = '';
     this.world = null;
+    this.ui.togglePause(false);
   }
 
   _loop() {
@@ -68,6 +71,11 @@ export class App {
           break;
         case 'settings':
           this._openSettingsModal();
+          break;
+        case 'close-pause':
+          if (this.world?.paused) {
+            this.world.togglePause();
+          }
           break;
         default:
           break;
@@ -117,8 +125,19 @@ export class App {
           label: 'Cinematic (High Fidelity, Dense Streets)',
           action: () => applyProfile({ fidelity: 1.3, density: 1.3 }, 'Cinematic'),
         },
+        { label: 'Close', action: () => this.ui.hideModal() },
       ],
     });
+  }
+
+  _bindKeyboard() {
+    this._keyHandler = (event) => {
+      if (event.key === 'Escape' && this.world) {
+        event.preventDefault();
+        this.world.togglePause();
+      }
+    };
+    window.addEventListener('keydown', this._keyHandler);
   }
 }
 

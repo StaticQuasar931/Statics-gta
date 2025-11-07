@@ -1,14 +1,37 @@
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 200'>
-  <rect width='160' height='200' fill='#05060f'/>
-  <g transform='translate(40,30)'>
-    <circle cx='40' cy='32' r='28' fill='#f1c27d'/>
-    <rect x='10' y='60' width='60' height='80' rx='20' fill='#14213d'/>
-    <rect x='0' y='80' width='20' height='70' rx='10' fill='#fca311'/>
-    <rect x='60' y='80' width='20' height='70' rx='10' fill='#fca311'/>
-    <rect x='24' y='132' width='12' height='42' fill='#2f2f2f' rx='6'/>
-    <rect x='52' y='132' width='12' height='42' fill='#2f2f2f' rx='6'/>
-    <rect x='22' y='52' width='36' height='20' rx='6' fill='#1d3557' />
-    <polygon points='40,40 52,60 28,60' fill='#fca311' opacity='0.9' />
+<svg width="160" height="200" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="200" rx="22" fill="url(#bg)"/>
+  <g transform="translate(28 20)">
+    <path d="M52 20c14 0 26 12 26 26s-12 26-26 26-26-12-26-26 12-26 26-26z" fill="url(#skin)" stroke="#0F1D34" stroke-width="5"/>
+    <path d="M52 72c32 0 58 26 58 60v18H-6v-18c0-34 26-60 58-60z" fill="url(#uniform)" stroke="#0F1D34" stroke-width="5"/>
+    <path d="M16 110c24 10 48 10 72 0v32H16v-32z" fill="rgba(255,255,255,0.18)"/>
+    <path d="M18 142h68v30l-18 12-16-8-16 8-18-12v-30z" fill="url(#pants)" stroke="#0A1422" stroke-width="5"/>
+    <path d="M18 70h68l-6-22-28-12-28 12-6 22z" fill="url(#vest)" stroke="#0F1D34" stroke-width="5"/>
+    <rect x="34" y="86" width="12" height="16" rx="3" fill="#FFD166"/>
+    <rect x="58" y="86" width="12" height="16" rx="3" fill="#FFD166"/>
+    <circle cx="42" cy="36" r="5" fill="#0F172A"/>
+    <circle cx="62" cy="36" r="5" fill="#0F172A"/>
+    <path d="M40 52c8 6 16 6 24 0" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
   </g>
-  <text x='80' y='186' text-anchor='middle' font-family='Segoe UI, sans-serif' font-size='14' fill='rgba(255,255,255,0.7)'>Officer</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="160" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#081425"/>
+      <stop offset="1" stop-color="#0F2036"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="26" y1="20" x2="78" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE0B8"/>
+      <stop offset="1" stop-color="#F1B487"/>
+    </linearGradient>
+    <linearGradient id="uniform" x1="-6" y1="72" x2="104" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D6BFF"/>
+      <stop offset="1" stop-color="#152D6F"/>
+    </linearGradient>
+    <linearGradient id="pants" x1="18" y1="142" x2="86" y2="192" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13213C"/>
+      <stop offset="1" stop-color="#080F1A"/>
+    </linearGradient>
+    <linearGradient id="vest" x1="18" y1="46" x2="86" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18345C"/>
+      <stop offset="1" stop-color="#0C1A30"/>
+    </linearGradient>
+  </defs>
 </svg>

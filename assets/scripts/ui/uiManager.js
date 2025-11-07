@@ -23,7 +23,7 @@ export class UIManager {
         <img src="assets/images/ui/city-map.svg" alt="Neon skyline map" loading="lazy" />
         <div>
           <h1>StaticQuasar931 Presents<br><span>Neon Grandline</span></h1>
-          <p class="tagline">A hand-crafted 3D sandbox built for the browser—steal rides, outrun Metro Patrol, and build your empire.</p>
+          <p class="tagline">A hand-crafted neon sandbox built for the browser—steal rides, outrun Metro Patrol, and build your empire.</p>
         </div>
       </div>
       <div class="lobby-actions">
@@ -108,6 +108,20 @@ export class UIManager {
     this.root.appendChild(hud);
     this.hud = hud;
     this.crimeList = hud.querySelector('.crime-feed ul');
+    const pause = document.createElement('div');
+    pause.className = 'pause-overlay hidden';
+    pause.innerHTML = `
+      <div class="pause-card">
+        <h2>Paused</h2>
+        <p>Press ESC to resume or open settings for visual tweaks.</p>
+        <div class="pause-actions">
+          <button data-action="settings">Settings</button>
+          <button data-action="close-pause">Resume</button>
+        </div>
+      </div>
+    `;
+    hud.appendChild(pause);
+    this.pauseOverlay = pause;
   }
 
   _createModal() {
@@ -157,11 +171,29 @@ export class UIManager {
   showLoader(message = 'Loading…') {
     const messageElem = this.loader.querySelector('.loader-text .message');
     if (messageElem) messageElem.textContent = message;
+    const bar = this.loader.querySelector('.progress span');
+    if (bar) bar.style.width = '0%';
     this.loader.classList.remove('hidden');
   }
 
   hideLoader() {
     this.loader.classList.add('hidden');
+  }
+
+  updateLoader(message, progress) {
+    const messageElem = this.loader.querySelector('.loader-text .message');
+    if (messageElem) {
+      messageElem.textContent = message;
+    }
+    const bar = this.loader.querySelector('.progress span');
+    if (bar) {
+      if (typeof progress === 'number') {
+        bar.style.width = `${Math.round(progress * 100)}%`;
+      } else if (message) {
+        const match = message.match(/(\d+)/);
+        bar.style.width = match ? `${match[1]}%` : '100%';
+      }
+    }
   }
 
   showHUD() {
@@ -173,6 +205,17 @@ export class UIManager {
   }
 
   toggleSettings() {}
+
+  togglePause(paused) {
+    if (!this.pauseOverlay) return;
+    if (paused) {
+      this.pauseOverlay.classList.remove('hidden');
+      this.hud.classList.add('paused');
+    } else {
+      this.pauseOverlay.classList.add('hidden');
+      this.hud.classList.remove('paused');
+    }
+  }
 
   updateHUD({ time, mission, wantedLevel, money, health, armor, stamina, vehicle, hint }) {
     const timeElem = this.hud.querySelector('.hud-clock .time');
