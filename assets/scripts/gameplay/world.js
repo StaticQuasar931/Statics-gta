@@ -34,6 +34,12 @@ const ASSET_MANIFEST = {
   hudMap: 'assets/images/ui/city-map.svg',
 };
 
+const TRAFFIC_STATS = {
+  car: { maxSpeed: 260, acceleration: 150 },
+  sport: { maxSpeed: 360, acceleration: 230 },
+  bike: { maxSpeed: 320, acceleration: 210 },
+};
+
 const CRIME_CAP = {
   gunfire: 240,
   homicide: 680,
@@ -43,14 +49,18 @@ const CRIME_CAP = {
 };
 
 const CRIME_DECAY = {
-  gunfire: 28,
-  homicide: 18,
-  theft: 20,
-  collision: 22,
-  robbery: 16,
+  gunfire: 9,
+  homicide: 5,
+  theft: 7,
+  collision: 8,
+  robbery: 6,
 };
 
 const MAX_WANTED_POINTS = 1500;
+const WANTED_HOLD_BASE = 12;
+const WANTED_HOLD_PER_STAR = 3.5;
+const POLICE_SIGHT_RADIUS = 420;
+const COP_SIGHT_RADIUS = 340;
 
 export class GameWorld {
   constructor(container, ui, settings = {}) {
@@ -86,6 +96,8 @@ export class GameWorld {
 
     this._wantedCleared = true;
     this._respawnTimer = -1;
+    this._timeSinceCrime = Number.POSITIVE_INFINITY;
+    this._lastCrime = null;
 
     this.economy = new EconomySystem(ui);
     this.missions = new MissionSystem(ui);
@@ -171,6 +183,10 @@ export class GameWorld {
     this.police.update(delta);
     this._updatePlayerDown(delta);
 
+    if (this.wanted > 0) {
+      this._timeSinceCrime = Math.min(this._timeSinceCrime + delta, 999);
+    }
+
     this._decayWanted(delta);
     this._maintainPopulation();
 
@@ -211,8 +227,9 @@ export class GameWorld {
     const y = player.y + Math.sin(heading) * distance;
     const image = this.assets.get('sport');
     const vehicle = new Vehicle(x, y, heading, image);
-    vehicle.name = config.label;
-    vehicle.maxSpeed = config.maxSpeed;
+    vehicle.name = config.label ?? vehicle.name;
+    vehicle.maxSpeed = config.maxSpeed ?? vehicle.maxSpeed;
+    vehicle.acceleration = config.acceleration ?? Math.max(160, vehicle.maxSpeed * 0.6);
     vehicle.owner = 'player';
     vehicle.ai = null;
     this.addVehicle(vehicle);
@@ -234,8 +251,11 @@ export class GameWorld {
     this.crimeBuckets[key] = Math.min(cap, this.crimeBuckets[key] + value);
     this.wanted = Math.min(MAX_WANTED_POINTS, this._recalculateWanted());
     this.police.setWanted(this.wanted);
-    this.ui.logCrime({ type, severity: this._severityForValue(value), wanted: this.wanted });
+    const time = this._formatTime(this.dayTime);
+    this.ui.logCrime({ type, severity: this._severityForValue(value), wanted: this.wanted, time });
     this._wantedCleared = false;
+    this._timeSinceCrime = 0;
+    this._lastCrime = key;
   }
 
   clearCrimeBuckets() {
@@ -245,6 +265,8 @@ export class GameWorld {
     this.wanted = 0;
     this.police.setWanted(this.wanted);
     this._wantedCleared = true;
+    this._lastCrime = null;
+    this._timeSinceCrime = Number.POSITIVE_INFINITY;
   }
 
   findNearbyVehicle(x, y, radius, predicate = () => true) {
@@ -308,7 +330,13 @@ export class GameWorld {
       const distance = 220 + i * 30;
       const x = Math.cos(angle) * distance + lane * 18;
       const y = Math.sin(angle) * distance + lane * 18;
-      const vehicle = new Vehicle(x, y, angle + Math.PI / 2, this.assets.get(palette[i % palette.length]));
+      const key = palette[i % palette.length];
+      const vehicle = new Vehicle(x, y, angle + Math.PI / 2, this.assets.get(key));
+      const stats = TRAFFIC_STATS[key];
+      if (stats) {
+        vehicle.maxSpeed = stats.maxSpeed;
+        vehicle.acceleration = stats.acceleration;
+      }
       vehicle.ai = 'traffic';
       this.vehicles.push(vehicle);
     }
@@ -421,11 +449,26 @@ export class GameWorld {
   }
 
   _decayWanted(delta) {
+    if (this.wanted <= 0) {
+      this._timeSinceCrime = Number.POSITIVE_INFINITY;
+      return;
+    }
+
+    const hold = this._wantedHoldDuration();
+    if (this._timeSinceCrime < hold) {
+      return;
+    }
+
+    const exposed = this._playerExposed();
+    const comfortModifier = this.settings.comfort === 'steady' ? 0.75 : 1;
+    const pace = exposed ? 0.22 : 1.05;
     let changed = false;
+
     for (const key of Object.keys(this.crimeBuckets)) {
       const before = this.crimeBuckets[key];
       if (before <= 0) continue;
-      const decay = (CRIME_DECAY[key] ?? 18) * delta;
+      const baseRate = CRIME_DECAY[key] ?? 6;
+      const decay = baseRate * pace * comfortModifier * delta;
       const after = Math.max(0, before - decay);
       if (after !== before) {
         this.crimeBuckets[key] = after;
@@ -435,7 +478,11 @@ export class GameWorld {
 
     const previous = this.wanted;
     const recalculated = this._recalculateWanted();
-    this.wanted = recalculated < 0.5 ? 0 : Math.min(MAX_WANTED_POINTS, recalculated);
+    this.wanted = recalculated < 5 ? 0 : Math.min(MAX_WANTED_POINTS, recalculated);
+
+    if (this.wanted === 0) {
+      this._timeSinceCrime = Number.POSITIVE_INFINITY;
+    }
 
     if (changed || previous !== this.wanted) {
       this.police.setWanted(this.wanted);
@@ -491,6 +538,39 @@ export class GameWorld {
 
   _recalculateWanted() {
     return Object.values(this.crimeBuckets).reduce((sum, amount) => sum + amount, 0);
+  }
+
+  _wantedHoldDuration() {
+    return WANTED_HOLD_BASE + this.police.level * WANTED_HOLD_PER_STAR;
+  }
+
+  _playerExposed() {
+    const detection = POLICE_SIGHT_RADIUS + this.police.level * 30;
+    for (const unit of this.police.units ?? []) {
+      if (!unit) continue;
+      const distance = Math.hypot(unit.x - this.player.x, unit.y - this.player.y);
+      if (distance < detection) {
+        return true;
+      }
+    }
+
+    for (const vehicle of this.vehicles) {
+      if (vehicle.faction !== 'police') continue;
+      const distance = Math.hypot(vehicle.x - this.player.x, vehicle.y - this.player.y);
+      if (distance < detection) {
+        return true;
+      }
+    }
+
+    for (const ped of this.pedestrians) {
+      if (ped.dead || ped.role !== 'cop') continue;
+      const distance = Math.hypot(ped.x - this.player.x, ped.y - this.player.y);
+      if (distance < COP_SIGHT_RADIUS) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   _maintainPopulation() {

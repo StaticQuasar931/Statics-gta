@@ -12,6 +12,8 @@ export class UIManager {
     this._createModal();
     this.toastStack = document.createElement('div');
     this.toastStack.className = 'toast-stack';
+    this.toastStack.setAttribute('aria-live', 'polite');
+    this.toastStack.setAttribute('role', 'status');
     this.root.appendChild(this.toastStack);
   }
 
@@ -301,9 +303,10 @@ export class UIManager {
     item.dataset.severity = entry.severity ?? 'minor';
     const severityLabel = (entry.severity ?? 'minor').toUpperCase();
     const meta = `${severityLabel} · ${Math.round(entry.wanted)} WP`;
+    const time = entry.time ? `<span class="crime-time">${entry.time}</span>` : '';
     item.innerHTML = `
       <span class="crime-type">${entry.type}</span>
-      <span class="crime-meta">${entry.time ?? ''} ${meta}</span>
+      <span class="crime-meta">${time} ${meta}</span>
     `;
     this.crimeList.prepend(item);
     while (this.crimeList.children.length > 5) {

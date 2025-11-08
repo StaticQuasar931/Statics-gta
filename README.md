@@ -8,7 +8,9 @@ Neon Grandline is a browser-first, top-down crime sandbox inspired by blockbuste
 - **Playable sandbox loop** – Walk, sprint, aim, fire, loot, jack cars, bank scores, accept missions, and trigger escalating Metro responses. Crimes are bucketed logically so stray shots can’t catapult you to five stars.
 - **Upgraded assets** – All buildings, vehicles, weapons, UI panels, and character portraits ship as bespoke SVG illustrations—no emoji placeholders, no broken links. Missing textures gracefully fall back to a neon procedural tile.
 - **Police, AWL & economy tuning** – Active Wanted Level (AWL) points accrue per crime (e.g. +20 for vehicle theft, +100 for homicide), decay while you hide, and map cleanly onto the 50/120/300/600/1000 star thresholds. Metro patrols chase, ram, and fire from their cruisers while SWAT vans roll in at high stars. Garages sell upgradeable cars, banks support deposits or risky heists, and every casualty can drop cash.
+- **Tuned pursuit pacing** – AWL decay now respects heat hold times, police sight-lines, and comfort settings, so you must break line-of-sight before the wanted level bleeds off. Crime logs stamp the current time and the toast stack has shifted to the top-right for quick situational reads.
 - **Quality-of-life UX** – A StaticQuasar931-branded lobby, animated loader with live progress, responsive HUD, ESC-powered pause/settings overlay, toasts, and mission prompts keep the action readable across the requested desktop resolutions.
+- **Refined driving physics** – Delta-aware friction, harder braking, clamped reverse speeds, and distinct stat packages for sedans, sports cars, and bikes make vehicles meaningfully faster than sprinting on foot while still controllable with keyboard steering.
 
 ## Quick start
 

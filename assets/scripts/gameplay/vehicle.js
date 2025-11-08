@@ -1,6 +1,6 @@
-const BASE_FRICTION = 0.92;
-const BRAKE_FORCE = 0.7;
-const STEER_SPEED = 2.6;
+const BASE_FRICTION = 0.985;
+const BRAKE_FORCE = 4.2;
+const STEER_SPEED = 2.9;
 
 export class Vehicle {
   constructor(x, y, heading, image) {
@@ -12,8 +12,8 @@ export class Vehicle {
     this.driver = null;
     this.radius = 26;
     this.name = randomName();
-    this.maxSpeed = 240;
-    this.acceleration = 120;
+    this.maxSpeed = 320;
+    this.acceleration = 200;
     this.faction = 'civ';
     this.locked = false;
     this.ai = null;
@@ -34,7 +34,8 @@ export class Vehicle {
     this.x += Math.cos(this.heading) * this.speed * delta;
     this.y += Math.sin(this.heading) * this.speed * delta;
 
-    this.speed *= BASE_FRICTION;
+    const frictionFactor = Math.pow(BASE_FRICTION, delta * 60);
+    this.speed *= frictionFactor;
 
     if (Math.abs(this.speed) < 2) {
       this.speed = 0;
@@ -57,12 +58,17 @@ export class Vehicle {
     }
 
     if (brake) {
-      this.speed *= BRAKE_FORCE;
+      const brakeFactor = Math.max(0, 1 - BRAKE_FORCE * delta);
+      this.speed *= brakeFactor;
     }
 
     if (this.speed !== 0) {
       this.heading += steer * STEER_SPEED * delta * Math.sign(this.speed);
     }
+
+    const maxForward = this.maxSpeed;
+    const maxReverse = this.maxSpeed * 0.45;
+    this.speed = Math.max(-maxReverse, Math.min(this.speed, maxForward));
 
     this.x = Math.max(-BOUND, Math.min(BOUND, this.x));
     this.y = Math.max(-BOUND, Math.min(BOUND, this.y));
@@ -105,8 +111,8 @@ export class Vehicle {
   }
 
   _updateTraffic(delta, world) {
-    if (Math.abs(this.speed) < 20) {
-      this.speed = 80 + Math.random() * 40;
+    if (Math.abs(this.speed) < 50) {
+      this.speed = 120 + Math.random() * 80;
     }
     this.heading += Math.sin(world.dayTime / 60 + this.x * 0.001) * 0.01;
   }
@@ -119,8 +125,8 @@ export class Vehicle {
     const steer = Math.sin(angle - this.heading);
     this.heading += steer * 2.8 * delta;
     const distance = Math.hypot(dx, dy);
-    const desired = distance > 140 ? this.maxSpeed : this.maxSpeed * 0.4;
-    this.speed += (desired - this.speed) * 0.6 * delta;
+    const desired = distance > 140 ? this.maxSpeed : this.maxSpeed * 0.5;
+    this.speed += (desired - this.speed) * 0.7 * delta;
     if (distance < 80 && world.player.vehicle === this) {
       world.reportCrime('Police collision', 26, 'collision');
     }
