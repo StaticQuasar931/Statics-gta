@@ -67,7 +67,11 @@ export class Player {
   }
 
   cameraTarget() {
-    return { x: this.x, y: this.y };
+    const chaseDistance = 120;
+    return {
+      x: this.x - Math.cos(this.heading) * chaseDistance,
+      y: this.y - Math.sin(this.heading) * chaseDistance - 50,
+    };
   }
 
   _updateOnFoot(delta, world) {

@@ -117,6 +117,14 @@ export class UIManager {
       <div class="pause-card">
         <h2>Paused</h2>
         <p>Press ESC to resume or open settings for visual tweaks.</p>
+        <div class="keybinds">
+          <div><span>WASD</span><small>Move / steer</small></div>
+          <div><span>Shift</span><small>Run / boost</small></div>
+          <div><span>Space</span><small>Brake / handbrake</small></div>
+          <div><span>E</span><small>Enter / exit / interact</small></div>
+          <div><span>Mouse</span><small>Aim / fire</small></div>
+          <div><span>ESC</span><small>Pause / unpause</small></div>
+        </div>
         <div class="pause-actions">
           <button data-action="settings">Settings</button>
           <button data-action="close-pause">Resume</button>
@@ -248,7 +256,12 @@ export class UIManager {
     }
     const vehicleElem = this.hud.querySelector('.hud-footer .vehicle');
     if (vehicleElem) {
-      vehicleElem.textContent = vehicle ? `${vehicle.name} ${Math.round(vehicle.speed)} km/h` : 'On Foot';
+      if (vehicle) {
+        const mph = Math.max(0, Math.round(vehicle.speed * 0.62));
+        vehicleElem.textContent = `${vehicle.name} · ${mph} mph`;
+      } else {
+        vehicleElem.textContent = 'On Foot';
+      }
     }
     const hintElem = this.hud.querySelector('.hud-footer .hint');
     if (hintElem && hint) {

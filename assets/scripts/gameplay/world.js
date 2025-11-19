@@ -26,18 +26,34 @@ const ASSET_MANIFEST = {
   cop: 'assets/images/characters/npc-cop.svg',
   car: 'assets/images/vehicles/sedan.svg',
   sport: 'assets/images/vehicles/sports-car.svg',
+  muscle: 'assets/images/vehicles/muscle-car.svg',
+  truck: 'assets/images/vehicles/truck.svg',
   police: 'assets/images/vehicles/police-cruiser.svg',
   swat: 'assets/images/vehicles/swat-van.svg',
   bike: 'assets/images/vehicles/motorcycle.svg',
+  helicopter: 'assets/images/vehicles/helicopter.svg',
+  boat: 'assets/images/vehicles/boat.svg',
   money: 'assets/images/loot/cash.svg',
   weapon: 'assets/images/weapons/rifle.svg',
   hudMap: 'assets/images/ui/city-map.svg',
+  building01: 'assets/images/buildings/building-01.svg',
+  building02: 'assets/images/buildings/building-02.svg',
+  building03: 'assets/images/buildings/building-03.svg',
+  building04: 'assets/images/buildings/building-04.svg',
+  building05: 'assets/images/buildings/building-05.svg',
+  building06: 'assets/images/buildings/building-06.svg',
+  building07: 'assets/images/buildings/building-07.svg',
+  building08: 'assets/images/buildings/building-08.svg',
+  building09: 'assets/images/buildings/building-09.svg',
+  building10: 'assets/images/buildings/building-10.svg',
 };
 
 const TRAFFIC_STATS = {
   car: { maxSpeed: 260, acceleration: 150 },
   sport: { maxSpeed: 360, acceleration: 230 },
   bike: { maxSpeed: 320, acceleration: 210 },
+  muscle: { maxSpeed: 300, acceleration: 190 },
+  truck: { maxSpeed: 240, acceleration: 140 },
 };
 
 const CRIME_CAP = {
@@ -104,6 +120,19 @@ export class GameWorld {
     this.police = new PoliceSystem(this);
 
     this._hudTimer = 0;
+
+    this._buildingKeys = [
+      'building01',
+      'building02',
+      'building03',
+      'building04',
+      'building05',
+      'building06',
+      'building07',
+      'building08',
+      'building09',
+      'building10',
+    ];
   }
 
   async init() {
@@ -323,8 +352,8 @@ export class GameWorld {
   }
 
   _spawnTraffic() {
-    const palette = ['car', 'sport', 'bike'];
-    for (let i = 0; i < 12; i += 1) {
+    const palette = ['car', 'sport', 'bike', 'muscle', 'truck'];
+    for (let i = 0; i < 16; i += 1) {
       const lane = (i % 3) - 1;
       const angle = (Math.PI * i) / 6;
       const distance = 220 + i * 30;
@@ -382,7 +411,8 @@ export class GameWorld {
       for (let x = -count / 2; x < count / 2; x += 1) {
         const district = DISTRICT_COLORS[(Math.abs(x) + Math.abs(y)) % DISTRICT_COLORS.length];
         const isMainRoad = Math.abs(x) % 4 === 0 || Math.abs(y) % 4 === 0;
-        const tile = { x: x * TILE_SIZE, y: y * TILE_SIZE, district };
+        const spriteKey = this._buildingKeys[(Math.abs(x * 13 + y * 7) + this._buildingKeys.length) % this._buildingKeys.length];
+        const tile = { x: x * TILE_SIZE, y: y * TILE_SIZE, district, spriteKey };
         this.map.push({ ...tile, type: isMainRoad ? 'road' : 'building' });
         if (isMainRoad) {
           this.roads.push(tile);
@@ -634,11 +664,17 @@ export class GameWorld {
 
   _drawGround(ctx) {
     for (const road of this.roads) {
-      ctx.fillStyle = road.district.road;
+      const gradient = ctx.createLinearGradient(road.x - TILE_SIZE / 2, road.y - TILE_SIZE / 2, road.x + TILE_SIZE / 2, road.y + TILE_SIZE / 2);
+      gradient.addColorStop(0, `${road.district.road}d0`);
+      gradient.addColorStop(1, `${road.district.road}`);
+      ctx.fillStyle = gradient;
       ctx.fillRect(road.x - TILE_SIZE / 2, road.y - TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
     }
     for (const building of this.buildings) {
-      ctx.fillStyle = building.district.building;
+      const gradient = ctx.createRadialGradient(building.x, building.y, 6, building.x, building.y, TILE_SIZE / 1.5);
+      gradient.addColorStop(0, `${building.district.building}ff`);
+      gradient.addColorStop(1, `${building.district.building}cc`);
+      ctx.fillStyle = gradient;
       ctx.fillRect(building.x - TILE_SIZE / 2, building.y - TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
     }
   }
@@ -661,13 +697,28 @@ export class GameWorld {
   }
 
   _drawBuilding(ctx, tile) {
-    const size = TILE_SIZE - 8;
-    ctx.fillStyle = tile.district.building;
-    ctx.fillRect(tile.x - size / 2, tile.y - size / 2, size, size);
-    ctx.fillStyle = tile.district.accent;
-    ctx.globalAlpha = 0.35;
-    ctx.fillRect(tile.x - size / 2, tile.y - size / 2, size, 6);
+    const size = TILE_SIZE - 6;
+    ctx.save();
+    ctx.translate(tile.x, tile.y);
+    ctx.fillStyle = '#02060d';
+    ctx.globalAlpha = 0.45;
+    ctx.fillRect(-size / 2 + 4, -size / 2 + 4, size, size);
     ctx.globalAlpha = 1;
+    ctx.fillStyle = tile.district.building;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+    ctx.fillStyle = tile.district.accent;
+    ctx.fillRect(-size / 2, -size / 2, size, 6);
+    const sprite = this.assets.get(tile.spriteKey);
+    if (sprite) {
+      ctx.save();
+      ctx.translate(0, -8);
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size * 0.72);
+      ctx.restore();
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.restore();
   }
 
   _drawShop(ctx, shop) {

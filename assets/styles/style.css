@@ -480,6 +480,40 @@ body {
   color: var(--muted);
 }
 
+.keybinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin: 0 0 18px;
+  text-align: left;
+}
+
+.keybinds div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 8px 12px;
+  border-radius: 12px;
+}
+
+.keybinds span {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 46px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+}
+
+.keybinds small {
+  color: var(--muted);
+  letter-spacing: 0.03rem;
+}
+
 .pause-actions {
   display: flex;
   gap: 16px;
