@@ -77,6 +77,13 @@ export class App {
         case 'settings':
           this._openSettingsModal();
           break;
+        case 'restart':
+          await this.start();
+          break;
+        case 'lobby':
+          this.stop();
+          this.ui.showLobby();
+          break;
         case 'close-pause':
           if (this.world?.paused) {
             this.world.togglePause();

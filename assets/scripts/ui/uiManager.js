@@ -79,6 +79,11 @@ export class UIManager {
           <span class="stars">☆ ☆ ☆ ☆ ☆</span>
           <span class="awl">0 WP</span>
         </div>
+        <div class="hud-speedo">
+          <div class="speed-value">0</div>
+          <div class="speed-label">MPH</div>
+          <div class="speed-gear">N</div>
+        </div>
         <div class="hud-money">
           <span class="value">$0</span>
         </div>
@@ -127,6 +132,8 @@ export class UIManager {
         </div>
         <div class="pause-actions">
           <button data-action="settings">Settings</button>
+          <button data-action="restart">Restart</button>
+          <button data-action="lobby">Return to Lobby</button>
           <button data-action="close-pause">Resume</button>
         </div>
       </div>
@@ -253,6 +260,14 @@ export class UIManager {
         .map((_, idx) => (idx < wantedLevel ? '★' : '☆'))
         .join(' ');
       wanted.querySelector('.stars').textContent = stars;
+    }
+    const speedo = this.hud.querySelector('.hud-speedo');
+    if (speedo) {
+      const mph = vehicle ? Math.max(0, Math.round(vehicle.speed * 0.62)) : 0;
+      const gear = vehicle ? (Math.abs(vehicle.speed) < 4 ? 'N' : vehicle.speed >= 0 ? 'D' : 'R') : '—';
+      speedo.querySelector('.speed-value').textContent = mph.toString();
+      speedo.querySelector('.speed-gear').textContent = gear;
+      speedo.dataset.state = vehicle ? 'vehicle' : 'foot';
     }
     const vehicleElem = this.hud.querySelector('.hud-footer .vehicle');
     if (vehicleElem) {

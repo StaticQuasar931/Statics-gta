@@ -85,6 +85,13 @@ export class Vehicle {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.heading);
+    ctx.save();
+    ctx.scale(1.4, 0.5);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 18, 26, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
     if (this.image) {
       ctx.drawImage(this.image, -36, -20, 72, 40);
     } else {

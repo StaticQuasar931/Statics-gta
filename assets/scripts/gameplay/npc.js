@@ -68,6 +68,13 @@ export class Pedestrian {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.heading);
+    ctx.save();
+    ctx.scale(1.1, 0.55);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(0, 16, 14, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
     if (this.image) {
       ctx.drawImage(this.image, -20, -26, 40, 52);
     } else {

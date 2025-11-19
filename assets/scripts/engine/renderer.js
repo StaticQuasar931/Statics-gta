@@ -57,9 +57,19 @@ export class Renderer {
     const [top, bottom] = SKY_GRADIENTS[this.skyMode] ?? SKY_GRADIENTS.day;
     const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
     gradient.addColorStop(0, top);
-    gradient.addColorStop(1, bottom);
+    gradient.addColorStop(0.65, bottom);
+    gradient.addColorStop(1, '#06080f');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, this.width, this.height);
+
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    const horizon = ctx.createRadialGradient(this.width / 2, this.height * 0.62, this.height * 0.1, this.width / 2, this.height * 0.6, this.height * 0.8);
+    horizon.addColorStop(0, 'rgba(77, 240, 255, 0.22)');
+    horizon.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = horizon;
+    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.restore();
   }
 
   _resize() {

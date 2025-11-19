@@ -694,25 +694,48 @@ export class GameWorld {
       ctx.stroke();
     }
     ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.lineWidth = 3;
+    for (const road of this.roads) {
+      ctx.strokeRect(
+        road.x - ROAD_WIDTH / 2,
+        road.y - ROAD_WIDTH / 2,
+        ROAD_WIDTH,
+        ROAD_WIDTH
+      );
+    }
   }
 
   _drawBuilding(ctx, tile) {
     const size = TILE_SIZE - 6;
     ctx.save();
     ctx.translate(tile.x, tile.y);
+    ctx.save();
+    ctx.scale(1.3, 0.65);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 10, size * 0.42, size * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     ctx.fillStyle = '#02060d';
     ctx.globalAlpha = 0.45;
-    ctx.fillRect(-size / 2 + 4, -size / 2 + 4, size, size);
+    ctx.fillRect(-size / 2 + 4, -size / 2 + 6, size, size);
     ctx.globalAlpha = 1;
-    ctx.fillStyle = tile.district.building;
+    const facade = ctx.createLinearGradient(-size / 2, -size / 2, size / 2, size / 2);
+    facade.addColorStop(0, `${tile.district.building}ee`);
+    facade.addColorStop(1, `${tile.district.building}aa`);
+    ctx.fillStyle = facade;
     ctx.fillRect(-size / 2, -size / 2, size, size);
     ctx.fillStyle = tile.district.accent;
-    ctx.fillRect(-size / 2, -size / 2, size, 6);
+    ctx.fillRect(-size / 2, -size / 2, size, 7);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(-size / 2 + 6, -size / 2 + 10, size - 12, 6);
     const sprite = this.assets.get(tile.spriteKey);
     if (sprite) {
       ctx.save();
-      ctx.translate(0, -8);
-      ctx.drawImage(sprite, -size / 2, -size / 2, size, size * 0.72);
+      ctx.translate(0, -10);
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size * 0.8);
       ctx.restore();
     }
     ctx.strokeStyle = 'rgba(0,0,0,0.25)';

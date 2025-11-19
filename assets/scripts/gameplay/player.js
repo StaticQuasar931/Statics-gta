@@ -55,22 +55,36 @@ export class Player {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.heading);
+
+    ctx.save();
+    ctx.scale(1.2, 0.6);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.beginPath();
+    ctx.ellipse(0, 18, 18, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     if (this.image) {
-      ctx.drawImage(this.image, -24, -32, 48, 64);
+      ctx.drawImage(this.image, -24, -36, 48, 72);
     } else {
-      ctx.fillStyle = '#4df0ff';
+      const gradient = ctx.createLinearGradient(-18, -32, 18, 32);
+      gradient.addColorStop(0, '#4df0ff');
+      gradient.addColorStop(1, '#1b92ff');
+      ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+      ctx.ellipse(0, -6, 18, 24, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = '#0b1020';
+      ctx.fillRect(-4, -10, 8, 14);
     }
     ctx.restore();
   }
 
   cameraTarget() {
-    const chaseDistance = 120;
+    const chaseDistance = this.vehicle ? 180 : 140;
     return {
       x: this.x - Math.cos(this.heading) * chaseDistance,
-      y: this.y - Math.sin(this.heading) * chaseDistance - 50,
+      y: this.y - Math.sin(this.heading) * chaseDistance - 70,
     };
   }
 
