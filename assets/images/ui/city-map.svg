@@ -1,0 +1,38 @@
+<svg width="360" height="360" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="360" height="360" rx="42" fill="url(#bg)"/>
+  <g stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 60h240v240H60V60z" fill="url(#grid)" stroke="rgba(13,20,36,0.6)"/>
+    <path d="M120 60v240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M180 60v240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M240 60v240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M60 120h240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M60 180h240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M60 240h240" stroke="rgba(77,240,255,0.45)"/>
+    <path d="M90 90h180v180H90V90z" fill="url(#core)" stroke="rgba(255,255,255,0.18)"/>
+    <path d="M90 210l60-120 60 120 60-120" stroke="#FFD166"/>
+    <circle cx="180" cy="180" r="34" fill="#FF5C7A" stroke="rgba(255,255,255,0.6)"/>
+    <circle cx="120" cy="120" r="22" fill="#4DF0FF" stroke="rgba(255,255,255,0.5)"/>
+    <circle cx="240" cy="120" r="26" fill="#7C67FF" stroke="rgba(255,255,255,0.4)"/>
+    <circle cx="120" cy="240" r="26" fill="#54E0A6" stroke="rgba(255,255,255,0.4)"/>
+    <circle cx="240" cy="240" r="22" fill="#FF8A5B" stroke="rgba(255,255,255,0.4)"/>
+    <path d="M180 80v40" stroke="#FFD166"/>
+    <path d="M280 180h-40" stroke="#FFD166"/>
+    <path d="M180 300v-40" stroke="#FFD166"/>
+    <path d="M80 180h40" stroke="#FFD166"/>
+  </g>
+  <text x="180" y="332" text-anchor="middle" fill="#FFFFFF" font-size="20" font-family="'Montserrat', sans-serif" letter-spacing="0.3em">NEON GRANDLINE</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="360" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#060A14"/>
+      <stop offset="1" stop-color="#101C2E"/>
+    </linearGradient>
+    <linearGradient id="grid" x1="60" y1="60" x2="300" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14213A"/>
+      <stop offset="1" stop-color="#0B1624"/>
+    </linearGradient>
+    <linearGradient id="core" x1="90" y1="90" x2="270" y2="270" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A2E4A"/>
+      <stop offset="1" stop-color="#0E1A2E"/>
+    </linearGradient>
+  </defs>
+</svg>

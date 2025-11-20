@@ -1,0 +1,30 @@
+<svg width="220" height="80" viewBox="0 0 220 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="220" height="80" rx="18" fill="url(#bg)"/>
+  <g transform="translate(18 20)">
+    <rect x="12" y="16" width="150" height="12" rx="6" fill="url(#barrel)"/>
+    <rect x="76" y="6" width="44" height="16" rx="6" fill="url(#sight)"/>
+    <rect x="28" y="12" width="20" height="20" rx="4" fill="#0B1624"/>
+    <rect x="132" y="12" width="20" height="24" rx="4" fill="#0B1624"/>
+    <path d="M12 28h36l12 26H14L12 28z" fill="url(#stock)" stroke="#050A14" stroke-width="4"/>
+    <path d="M124 20h24l22 20h20v12h-26l-20-20h-20v-12z" fill="#181F30" stroke="#050A14" stroke-width="4"/>
+    <rect x="24" y="40" width="48" height="8" rx="4" fill="#FF8A5B"/>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="220" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#060B14"/>
+      <stop offset="1" stop-color="#101C2A"/>
+    </linearGradient>
+    <linearGradient id="barrel" x1="12" y1="16" x2="162" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4DF0FF"/>
+      <stop offset="1" stop-color="#7C67FF"/>
+    </linearGradient>
+    <linearGradient id="sight" x1="76" y1="6" x2="120" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E2F4B"/>
+      <stop offset="1" stop-color="#0A1018"/>
+    </linearGradient>
+    <linearGradient id="stock" x1="12" y1="28" x2="60" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A2438"/>
+      <stop offset="1" stop-color="#0A101A"/>
+    </linearGradient>
+  </defs>
+</svg>

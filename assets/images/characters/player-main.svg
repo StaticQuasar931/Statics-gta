@@ -1,0 +1,43 @@
+<svg width="180" height="220" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="220" rx="24" fill="url(#bg)"/>
+  <g transform="translate(30 18)">
+    <path d="M60 24c16 0 28 12 28 28s-12 28-28 28-28-12-28-28 12-28 28-28z" fill="url(#face)" stroke="url(#edge)" stroke-width="4"/>
+    <path d="M60 86c34 0 62 28 62 62v22H-2v-22c0-34 28-62 62-62z" fill="url(#jacket)" stroke="url(#edge)" stroke-width="4"/>
+    <path d="M25 102c16 10 34 10 50 0v46H25v-46z" fill="url(#inner)" opacity="0.85"/>
+    <path d="M18 150h84v32l-20 14-22-12-22 12-20-14v-32z" fill="url(#pants)" stroke="url(#edge)" stroke-width="4"/>
+    <path d="M36 194h20l8 16h-32l4-16z" fill="#1F2A43"/>
+    <path d="M88 194h20l-4 16h-32l16-16z" fill="#1F2A43"/>
+    <circle cx="48" cy="38" r="6" fill="#0F172A"/>
+    <circle cx="72" cy="38" r="6" fill="#0F172A"/>
+    <path d="M46 56c8 10 20 10 28 0" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+    <path d="M24 120c24-14 48-14 72 0" stroke="rgba(255,255,255,0.28)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="96" cy="112" r="10" fill="#FFD166"/>
+    <circle cx="96" cy="112" r="4" fill="#0F172A"/>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="180" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F1A2E"/>
+      <stop offset="1" stop-color="#182C46"/>
+    </linearGradient>
+    <linearGradient id="face" x1="32" y1="24" x2="88" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F4C08E"/>
+      <stop offset="1" stop-color="#D98B59"/>
+    </linearGradient>
+    <linearGradient id="jacket" x1="-2" y1="86" x2="122" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4DF0FF"/>
+      <stop offset="1" stop-color="#8A7BFF"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="160" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#0F172A" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="25" y1="102" x2="75" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#1E2A44"/>
+    </linearGradient>
+    <linearGradient id="pants" x1="18" y1="150" x2="102" y2="208" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1C2C4A"/>
+      <stop offset="1" stop-color="#0B1220"/>
+    </linearGradient>
+  </defs>
+</svg>

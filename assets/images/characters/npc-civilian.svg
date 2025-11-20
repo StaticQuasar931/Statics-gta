@@ -1,0 +1,30 @@
+<svg width="160" height="200" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="200" rx="22" fill="url(#bg)"/>
+  <g transform="translate(32 22)">
+    <path d="M48 18c14 0 24 10 24 24s-10 24-24 24-24-10-24-24 10-24 24-24z" fill="url(#skin)" stroke="#1B2338" stroke-width="4"/>
+    <path d="M48 70c26 0 48 20 48 48v20H0v-20c0-28 22-48 48-48z" fill="url(#shirt)" stroke="#1B2338" stroke-width="4"/>
+    <path d="M14 108c22 8 46 8 68 0v28H14v-28z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M20 134h56v28l-16 12-12-8-12 8-16-12v-28z" fill="url(#pants)" stroke="#101829" stroke-width="4"/>
+    <circle cx="38" cy="34" r="4" fill="#0F172A"/>
+    <circle cx="58" cy="34" r="4" fill="#0F172A"/>
+    <path d="M36 50c6 6 18 6 24 0" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="160" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#101B2E"/>
+      <stop offset="1" stop-color="#1A2F4A"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="24" y1="18" x2="72" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD7B1"/>
+      <stop offset="1" stop-color="#E7A779"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="70" x2="96" y2="158" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3BC6FF"/>
+      <stop offset="1" stop-color="#7C9BFF"/>
+    </linearGradient>
+    <linearGradient id="pants" x1="20" y1="134" x2="76" y2="188" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1F2D4E"/>
+      <stop offset="1" stop-color="#0D141F"/>
+    </linearGradient>
+  </defs>
+</svg>
