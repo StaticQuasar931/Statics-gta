@@ -12,6 +12,7 @@ Neon Grandline is a browser-first, third-person crime sandbox inspired by blockb
 - **Quality-of-life UX** – A StaticQuasar931-branded lobby, animated loader with live progress, responsive HUD, ESC-powered pause/settings overlay, restart/return buttons, toasts, and mission prompts keep the action readable across the requested desktop resolutions.
 - **Third-person framing** – A chase-cam offset trails the protagonist with a full 3D WebGL scene: buildings and roads are extruded meshes, characters and cars gain box-modeled volume, and raycast aiming keeps the cursor glued to the asphalt.
 - **Refined driving physics** – Delta-aware friction, harder braking, clamped reverse speeds, and distinct stat packages for sedans, sports cars, bikes, trucks, and muscle cars make vehicles meaningfully faster than sprinting on foot while still controllable with keyboard steering. A HUD speedometer shows gear state and MPH in third-person view.
+- **Pointer-locked aiming + building intel** – Clicking the playfield locks the cursor for smooth third-person mouselook while a new "Nearby" HUD card surfaces the closest building facade, accent colour, and walking distance pulled from the SVG library.
 
 ## Quick start
 

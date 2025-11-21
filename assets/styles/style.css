@@ -312,6 +312,61 @@ body {
   letter-spacing: 0.08rem;
 }
 
+.hud-building {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(35, 56, 88, 0.75), rgba(18, 32, 58, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 120ms ease, transform 180ms ease, border-color 160ms ease;
+}
+
+.hud-building.visible {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: color-mix(in srgb, var(--accent, #6df) 45%, transparent);
+}
+
+.hud-building img {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.hud-building .label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.12rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.hud-building .name {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.hud-building .distance {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #6df) 35%, transparent);
+  color: var(--accent, #6df);
+  font-size: 0.78rem;
+}
+
 .hud-speedo {
   background: linear-gradient(180deg, rgba(61, 255, 219, 0.22), rgba(42, 122, 255, 0.28));
   padding: 10px 14px;

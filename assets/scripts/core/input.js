@@ -1,13 +1,16 @@
 const MOBILE_BREAKPOINT = 840;
 
 export class InputManager {
-  constructor(target = window) {
+  constructor(target = window, pointerElement = null) {
     this.target = target;
+    this.pointerElement = pointerElement;
     this.keysDown = new Set();
     this.keysPressed = new Set();
     this.pointer = { x: 0, y: 0, down: false };
     this.listeners = new Map();
     this.touchMode = matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+    this.pointerLocked = false;
+    this.pointerAnchor = { x: 0, y: 0 };
     this._bind();
   }
 
@@ -22,8 +25,18 @@ export class InputManager {
     };
 
     const move = (event) => {
-      this.pointer.x = event.clientX;
-      this.pointer.y = event.clientY;
+      const locked = document.pointerLockElement === this.pointerElement;
+      if (locked) {
+        const rect = this.pointerElement?.getBoundingClientRect();
+        if (!rect) return;
+        this.pointerLocked = true;
+        this.pointer.x = Math.min(Math.max(rect.left, this.pointer.x + (event.movementX ?? 0)), rect.right);
+        this.pointer.y = Math.min(Math.max(rect.top, this.pointer.y + (event.movementY ?? 0)), rect.bottom);
+      } else {
+        this.pointerLocked = false;
+        this.pointer.x = event.clientX;
+        this.pointer.y = event.clientY;
+      }
     };
 
     const pointerDown = (event) => {
@@ -31,6 +44,9 @@ export class InputManager {
       this.pointer.x = event.clientX;
       this.pointer.y = event.clientY;
       this.keysPressed.add('pointer');
+      if (this.pointerElement && document.pointerLockElement !== this.pointerElement) {
+        this.requestPointerLock();
+      }
     };
 
     const pointerUp = () => {
@@ -76,6 +92,20 @@ export class InputManager {
     this.target.addEventListener('touchstart', touchStart, { passive: true });
     this.target.addEventListener('touchmove', touchMove, { passive: true });
     this.target.addEventListener('touchend', touchEnd);
+
+    this._lockChange = () => {
+      const locked = document.pointerLockElement === this.pointerElement;
+      this.pointerLocked = locked;
+      if (locked) {
+        const rect = this.pointerElement?.getBoundingClientRect();
+        if (rect) {
+          this.pointer.x = rect.left + rect.width / 2;
+          this.pointer.y = rect.top + rect.height / 2;
+          this.pointerAnchor = { x: this.pointer.x, y: this.pointer.y };
+        }
+      }
+    };
+    document.addEventListener('pointerlockchange', this._lockChange);
   }
 
   resetFrame() {
@@ -121,6 +151,13 @@ export class InputManager {
     this.target.removeEventListener('touchstart', this._touchStart);
     this.target.removeEventListener('touchmove', this._touchMove);
     this.target.removeEventListener('touchend', this._touchEnd);
+    document.removeEventListener('pointerlockchange', this._lockChange);
     this.listeners.clear();
+  }
+
+  requestPointerLock() {
+    if (this.pointerElement?.requestPointerLock) {
+      this.pointerElement.requestPointerLock();
+    }
   }
 }

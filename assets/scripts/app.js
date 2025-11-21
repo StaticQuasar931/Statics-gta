@@ -40,6 +40,7 @@ export class App {
     this._lastFrameTime = performance.now();
     this._loop();
     this.ui.showToast('Welcome back to Neon Grandline, StaticQuasar931!', 'success');
+    this.ui.showToast('Tip: click the playfield once to lock the cursor for smooth 3D aiming.', 'info');
   }
 
   stop() {

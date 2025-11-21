@@ -102,6 +102,21 @@ export class Renderer {
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       this.staticGroup.add(mesh);
+
+      const panel = new THREE.Mesh(
+        new THREE.PlaneGeometry(24, 18),
+        new THREE.MeshStandardMaterial({
+          color: building.district.accent,
+          emissive: building.district.accent,
+          emissiveIntensity: 0.5,
+          transparent: true,
+          opacity: 0.8,
+          side: THREE.DoubleSide,
+        })
+      );
+      panel.position.set(building.x, Math.min(height, 32), building.y + 30);
+      panel.rotation.y = Math.PI;
+      this.staticGroup.add(panel);
     }
 
     const shopGeometry = new THREE.CylinderGeometry(12, 12, 22, 24);
@@ -147,13 +162,29 @@ export class Renderer {
   }
 
   _updateEntities({ target, vehicles, pedestrians, loot, bullets }) {
-    this._syncMesh('player', target, { color: '#5df0ff', height: 32, width: 18, depth: 28 });
+    this._syncMesh('player', target, { color: '#5df0ff', height: 34, width: 18, depth: 28, emissive: '#5df0ff' });
     vehicles.forEach((vehicle, idx) =>
-      this._syncMesh(`vehicle-${idx}`, vehicle, { color: '#f59f65', height: 22, width: 32, depth: 64, texture: vehicle.image })
+      this._syncMesh(`vehicle-${idx}`, vehicle, {
+        color: vehicle.faction === 'police' ? '#5ca8ff' : '#f59f65',
+        height: 22,
+        width: 32,
+        depth: vehicle.type === 'truck' ? 76 : 64,
+        texture: vehicle.image,
+        emissive: vehicle.faction === 'police' ? '#8cd5ff' : '#0d1828',
+      })
     );
-    pedestrians.forEach((ped, idx) =>
-      this._syncMesh(`ped-${idx}`, ped, { color: '#ffffff', height: 28, width: 16, depth: 16, texture: ped.image })
-    );
+    pedestrians.forEach((ped, idx) => {
+      const isCop = ped.role === 'cop';
+      const isGang = ped.role === 'gang';
+      this._syncMesh(`ped-${idx}`, ped, {
+        color: isCop ? '#4aa0ff' : isGang ? '#ff6b6b' : '#ffffff',
+        height: isCop ? 32 : 28,
+        width: 16,
+        depth: 16,
+        texture: ped.image,
+        emissive: isCop ? '#4aa0ff' : '#0d1828',
+      });
+    });
     loot.forEach((cash, idx) => this._syncMesh(`loot-${idx}`, cash, { color: '#00ff9c', height: 12, width: 12, depth: 12 }));
     bullets.forEach((bullet, idx) =>
       this._syncMesh(`bullet-${idx}`, bullet, { color: '#ff9b6b', height: 4, width: 4, depth: 8, yOffset: 8 })
@@ -177,7 +208,7 @@ export class Renderer {
     }
   }
 
-  _syncMesh(key, obj, { color, height, width, depth, texture, yOffset = 0 }) {
+  _syncMesh(key, obj, { color, height, width, depth, texture, yOffset = 0, emissive }) {
     if (!obj) return;
     let mesh = this.meshCache.get(key);
     if (!mesh) {
@@ -187,7 +218,7 @@ export class Renderer {
         map: texture ? this._textureFromImage(texture) : null,
         metalness: 0.1,
         roughness: 0.55,
-        emissive: '#0d1828',
+        emissive: emissive ?? '#0d1828',
         emissiveIntensity: 0.25,
       });
       mesh = new THREE.Mesh(geometry, material);

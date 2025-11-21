@@ -79,6 +79,14 @@ export class UIManager {
           <span class="stars">☆ ☆ ☆ ☆ ☆</span>
           <span class="awl">0 WP</span>
         </div>
+        <div class="hud-building">
+          <img src="assets/images/buildings/building-01.svg" alt="Nearest building" />
+          <div>
+            <span class="label">Nearby</span>
+            <span class="name">Skyline</span>
+            <span class="distance">—</span>
+          </div>
+        </div>
         <div class="hud-speedo">
           <div class="speed-value">0</div>
           <div class="speed-label">MPH</div>
@@ -235,7 +243,7 @@ export class UIManager {
     }
   }
 
-  updateHUD({ time, mission, wantedLevel, awl, money, health, armor, stamina, vehicle, hint }) {
+  updateHUD({ time, mission, wantedLevel, awl, money, health, armor, stamina, vehicle, hint, building }) {
     const timeElem = this.hud.querySelector('.hud-clock .time');
     if (timeElem) timeElem.textContent = time;
     const missionElem = this.hud.querySelector('.hud-clock .mission');
@@ -281,6 +289,24 @@ export class UIManager {
     const hintElem = this.hud.querySelector('.hud-footer .hint');
     if (hintElem && hint) {
       hintElem.textContent = hint;
+    }
+
+    const buildingElem = this.hud.querySelector('.hud-building');
+    if (buildingElem) {
+      if (building) {
+        buildingElem.classList.add('visible');
+        const img = buildingElem.querySelector('img');
+        if (img && building.sprite) {
+          img.src = building.sprite.src ?? img.src;
+        }
+        const nameElem = buildingElem.querySelector('.name');
+        if (nameElem) nameElem.textContent = building.name ?? 'Tower';
+        const distanceElem = buildingElem.querySelector('.distance');
+        if (distanceElem) distanceElem.textContent = `${building.distance ?? 0}m`;
+        buildingElem.style.setProperty('--accent', building.district?.accent ?? '#6df');
+      } else {
+        buildingElem.classList.remove('visible');
+      }
     }
   }
 

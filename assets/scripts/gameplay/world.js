@@ -84,7 +84,7 @@ export class GameWorld {
     this.settings = { fidelity: 1, density: 1, theme: 'neon', comfort: 'normal', ...settings };
 
     this.renderer = new Renderer(container);
-    this.input = new InputManager(window);
+    this.input = new InputManager(window, this.renderer.renderer.domElement);
     this.assets = new AssetLibrary(ASSET_MANIFEST);
 
     this.dayTime = 8 * 60;
@@ -147,6 +147,8 @@ export class GameWorld {
     this._spawnPedestrians();
     this._setupShops();
     this.renderer.buildStatic({ roads: this.roads, buildings: this.buildings, shops: this.shops, assets: this.assets });
+
+    this.renderer.renderer.domElement.addEventListener('click', () => this.input.requestPointerLock(), { passive: true });
 
     this.ui.hideLoader();
     this.ui.showToast('Simulation ready. Hit Launch City to begin!', 'success');
@@ -232,6 +234,7 @@ export class GameWorld {
       bullets: this.bullets,
     });
 
+    const nearbyBuilding = this._nearestBuilding();
     this.ui.updateHUD({
       time: this._formatTime(this.dayTime),
       mission: this.missions.activeMission?.label ?? 'Free Roam',
@@ -243,7 +246,28 @@ export class GameWorld {
       stamina: this.player.stamina,
       vehicle: this.player.vehicle,
       hint: this.player.hint,
+      building: nearbyBuilding,
     });
+  }
+
+  _nearestBuilding() {
+    if (!this.player || !this.buildings.length) return null;
+    let best = null;
+    let bestDist = Infinity;
+    for (const building of this.buildings) {
+      const dist = Math.hypot(building.x - this.player.x, building.y - this.player.y);
+      if (dist < bestDist) {
+        best = building;
+        bestDist = dist;
+      }
+    }
+    if (!best || bestDist > 240) return null;
+    return {
+      name: `Block ${Math.floor(Math.abs(best.x) / TILE_SIZE)}-${Math.floor(Math.abs(best.y) / TILE_SIZE)}`,
+      sprite: this.assets.get(best.spriteKey),
+      district: best.district,
+      distance: Math.round(bestDist),
+    };
   }
 
   spawnBullet({ x, y, direction, speed, owner, damage = 40 }) {
